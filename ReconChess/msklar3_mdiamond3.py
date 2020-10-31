@@ -2,7 +2,7 @@
 
 """
 File Name:      my_agent.py
-Authors:        Matthew Sklar, Matan Diamond
+Authors:        Matthew Sklar and Matan Diamond
 Date:           10/31/2020
 
 Description:    Python file for my agent.
@@ -15,7 +15,7 @@ from player import Player
 
 
 # TODO: Rename this class to what you would like your bot to be named during the game.
-class MagnusDCarlsen(Player):
+class MonkeyDCarlsen(Player):
 
     def __init__(self):
         pass
