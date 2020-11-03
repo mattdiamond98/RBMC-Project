@@ -14,8 +14,7 @@ import chess
 from player import Player
 
 
-# TODO: Rename this class to what you would like your bot to be named during the game.
-class MonkeyDCarlsen(Player):
+class MagnusDLuffy(Player):
 
     def __init__(self):
         pass
