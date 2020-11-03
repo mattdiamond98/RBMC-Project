@@ -1,0 +1,25 @@
+use scikit-learn for hyperparameter tuning
+
+nn ->
+    input state (board + castled)
+    modules ->
+        Policy (2 layers)
+            1) conv with 2 filters of kernel size 1x1 with stride 1
+            2) Batch norm
+            3) Rectifier normality
+            4) Fully connected linear layer 
+        Value (3 layers)
+            1) conv with 1 filter of kernel size 1x1 with stride 1
+            2) Batch norm
+            3) Rectifier normality
+            4) Fully connected linear layer to hidden layer of size 256
+            5) Rectifier nonlinearity
+            6) Fully connected linear layer to a scalar
+            7) tanh nonlinearity outputing scalar in [-1, 1]
+
+nn output layer ->
+    all possible actions
+    mapping -> 137 options
+
+TODO: Develop layer
+TODO: Figure out how to train
