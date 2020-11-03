@@ -1,0 +1,5 @@
+-> Consider redesign of nn architecture
+    -- look at alpha zero chess design
+-> hyperparameter tuning
+-> MCTS
+-> nn training
