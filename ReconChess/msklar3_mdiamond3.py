@@ -10,14 +10,23 @@ Source:         Adapted from recon-chess (https://pypi.org/project/reconchess/)
 """
 
 import random
+
 import chess
+import numpy as np
+import torch
+
+import msklar3_mdiamond3_nn as nn
 from player import Player
 
+# Shown in excel document
+MOVE_OPTIONS = 137
+IN_CHANNELS = 4
 
 class MagnusDLuffy(Player):
 
     def __init__(self):
-        pass
+        network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
+        network.forward(torch.randn(1, IN_CHANNELS, 8, 8))
         
     def handle_game_start(self, color, board):
         """
