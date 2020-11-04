@@ -1,7 +1,11 @@
 use scikit-learn for hyperparameter tuning
 
 nn ->
-    input state (board + castled)
+    input state (8x8 channels) ->
+        -- channel 1 -> board state
+        -- channel 2 -> turn (1 = white, 0 = black)
+        -- channel 3 -> we can castle (1 = true, 0 = false)
+        -- channel 4 -> prob they can castle [0, 1]
     modules ->
         Policy (2 layers)
             1) conv with 2 filters of kernel size 1x1 with stride 1
