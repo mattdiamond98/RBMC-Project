@@ -15,18 +15,21 @@ import chess
 import numpy as np
 import torch
 
-import msklar3_mdiamond3_nn as nn
+import msklar3_mdiamond8_chess_helper as chess_helper
+import msklar3_mdiamond8_config as config
+import msklar3_mdiamond8_mcts as mcts
+import msklar3_mdiamond8_nn as nn
 from player import Player
 
 # Shown in excel document
 MOVE_OPTIONS = 137
-IN_CHANNELS = 4
+IN_CHANNELS = 2
 
 class MagnusDLuffy(Player):
 
     def __init__(self):
-        network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
-        network.forward(torch.randn(1, IN_CHANNELS, 8, 8))
+        self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
+        self.mcts = None
         
     def handle_game_start(self, color, board):
         """
@@ -36,9 +39,11 @@ class MagnusDLuffy(Player):
         :param board: chess.Board -- initial board state
         :return:
         """
-        # TODO: implement this method
-        pass
-        
+        self.color = color
+        self.board = board  # this is test code
+        self.gen_state()
+        self.evaluate_state()
+     
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
         This function is called at the start of your turn and gives you the chance to update your board.
@@ -118,5 +123,32 @@ class MagnusDLuffy(Player):
         :param winner_color: Chess.BLACK/chess.WHITE -- the winning color
         :param win_reason: String -- the reason for the game ending
         """
-        # TODO: implement this method
-        pass
+        print("I'm gonna be king of the chess players!")
+
+    def pick_action(self, state, t):
+        # TODO: Decide if we will use id
+        # Create MCT
+        self.root = mcts.Node(state, 0)
+        self.mcts = mcts.MCTS(self.root)
+
+        for _ in range(config.MCTS_SIMULATIONS):
+            self.simulate()
+
+    def simulate(self):
+        leaf, path = self.mcts.select()
+
+    def evaluate_state(self):
+        state = self.gen_state()
+
+        pi, v = self.network.forward(state)
+        
+        # TODO: Filter out impossible moves?
+
+    # Generate the representation of the state for a neural network
+    def gen_state(self):
+        board_array = chess_helper.fen_to_board(self.board)
+        # if 
+        nn_state = torch.tensor([[board_array, board_array]])
+        
+        return nn_state
+

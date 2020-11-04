@@ -52,7 +52,7 @@ class Net(nn.Module):
 
     def PolicyForward(self, x):
         # Convolutional layer
-        x = self.policy_conv(x)
+        x = self.policy_conv(x.float())
         x = F.leaky_relu(self.policy_batchnorm(x))
 
         # Linear layer
@@ -62,13 +62,13 @@ class Net(nn.Module):
 
     def ValueForward(self, x):
         # Convolutional layer
-        x = self.value_conv(x)
+        x = self.value_conv(x.float())
         x = F.leaky_relu(self.value_batchnorm(x))
 
         # Linear layer
         x = F.leaky_relu(self.value_linear1(x.flatten()))
 
         # Linear layer
-        x = F.tanh(self.value_linear2(x.flatten()))
+        x = torch.tanh(self.value_linear2(x.flatten()))
 
         return x

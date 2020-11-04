@@ -1,4 +1,4 @@
-import msklar3_mdiamond3_config as config
+import msklar3_mdiamond8_config as config
 
 class Node():
     def __init__(self, state, id):
