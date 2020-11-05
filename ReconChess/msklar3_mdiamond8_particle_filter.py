@@ -1,4 +1,4 @@
-from msklar3_mdiamond8_chess_helper import piece_equal, known_empty_squares
+from msklar3_mdiamond8_chess_helper import piece_equal, known_empty_squares, gen_state
 import random
 
 class ParticleFilter():
@@ -17,7 +17,11 @@ class ParticleFilter():
       
       Goal is to update the particles based on how we believe opponents moved and update the weights accordingly
     """
-    pass
+    return # TODO: finish this
+    for i, (board,weight) in enumerate(self.particles):
+      state = gen_state(board, not self.color)
+      policy = network.PolicyForward(state)
+      
   
   def update_sense_result(self, sense_result):
     """

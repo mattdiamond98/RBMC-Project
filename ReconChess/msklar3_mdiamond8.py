@@ -13,12 +13,11 @@ import random
 
 import chess
 import numpy as np
-import torch
 
-import msklar3_mdiamond8_chess_helper as chess_helper
 import msklar3_mdiamond8_config as config
 import msklar3_mdiamond8_mcts as mcts
 import msklar3_mdiamond8_nn as nn
+from msklar3_mdiamond8_chess_helper import gen_state
 from msklar3_mdiamond8_particle_filter import ParticleFilter
 from player import Player
 
@@ -48,7 +47,7 @@ class MagnusDLuffy(Player):
         :param captured_piece: bool - true if your opponents captured your piece with their last move
         :param captured_square: chess.Square - position where your piece was captured
         """
-        self.state.update_opponent_move_result(captured_piece, captured_square)
+        self.state.update_opponent_move_result(captured_piece, captured_square, self.network)
 
     def choose_sense(self, possible_sense, possible_moves, seconds_left):
         """
@@ -94,7 +93,7 @@ class MagnusDLuffy(Player):
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
         # TODO: update this method
-        action = self.pick_action(self.gen_state(self.board))
+        action = self.pick_action(gen_state(self.board))
         print(action)
         self.mcts.to_string()
         choice = random.choice(possible_moves)
@@ -194,13 +193,3 @@ class MagnusDLuffy(Player):
         pi = pi / np.sum(pi)
 
         return pi, values
-
-    # Generate the representation of the state for a neural network
-    def gen_state(self, node, board, color):
-        board_array = chess_helper.fen_to_board(board)
-        player_layer = np.full((8,8), color)
-        
-        nn_state = torch.tensor([[board_array, player_layer]])
-        
-        return nn_state
-

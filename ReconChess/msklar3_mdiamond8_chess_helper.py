@@ -1,5 +1,6 @@
 import numpy as np
 import chess
+import torch
 
 piece_map = {
     'P' : 1,
@@ -31,6 +32,9 @@ board_map = {
     12 : 'k',
 }
 
+def reverse(piece): # integer reversal
+  return (piece + 6) % 12
+
 def piece_equal(piece1, piece2):
   if piece1 is None:
     return piece2 is None
@@ -56,8 +60,17 @@ def empty_path_squares(move):
   empty_squares = chess.between(move.from_square, move.to_square)
   empty_squares.append(move.from_square)
   return empty_squares
-  
-def fen_to_board(board):
+
+# Generate the representation of the state for a neural network
+def gen_state(board, color):
+    board_array = fen_to_board(board)
+    player_layer = np.full((8,8), color)
+    
+    nn_state = torch.tensor([[board_array, player_layer]])
+    
+    return nn_state
+
+def fen_to_board(board, reverse=False):
     fen = board.fen()
     board = np.zeros((8,8))
 
@@ -74,9 +87,8 @@ def fen_to_board(board):
             y += 1
             x = 0
         else:
-            board[y][x] = piece_map[c]
+            board[y][x] = reverse(piece_map[c]) if reverse else piece_map[c]
             x += 1
-
     return board
 
 def board_to_fen(board_state):
