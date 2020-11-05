@@ -1,4 +1,3 @@
-import numpy as np
 from msklar3_mdiamond8_chess_helper import piece_equal, known_empty_squares
 import random
 
@@ -8,7 +7,7 @@ class ParticleFilter():
     self.particles = [(board.copy(), 1/N) for _ in range(N)]
     self.N = N
   
-  def update_opponent_move_result(self):
+  def update_opponent_move_result(self, captured_piece, captured_square):
     """
       This function is called at the start of your turn and gives you the chance to update your board.
 
@@ -17,7 +16,7 @@ class ParticleFilter():
       
       Goal is to update the particles based on how we believe opponents moved and update the weights accordingly
     """
-    pass
+    
   
   def update_sense_result(self, sense_result):
     """
@@ -36,14 +35,14 @@ class ParticleFilter():
     for i, particle in enumerate(self.particles):
       board, weight = particle
       
-      correct = 0
+      new_weight = 1
       for sense in sense_result:
         square, piece = sense
         previous_piece = board.piece_at(square)
-        if piece_equal(piece, previous_piece):
-          correct += 1
+        if not piece_equal(piece, previous_piece):
+          new_weight *= 0.0001
         board.set_piece_at(square, piece)
-      new_weight = weight * (correct**2)
+      new_weight *= weight
       self.particles[i] = (board, new_weight)
     self.update_particles_by_weight()
     self.normalize_particles()
@@ -65,12 +64,12 @@ class ParticleFilter():
       
       if captured_piece:
         if board.piece_at(captured_square) is None:
-          new_weight = 0.00001 * weight
+          new_weight = 0.0001 * weight
       
       for square in empty_squares:
         if board.piece_at(square) is not None:
           board.set_piece_at(square, None)
-          new_weight = 0.00001 * weight
+          new_weight = 0.0001 * weight
       
       board.push(taken_move)
       self.particles[i] = (board, new_weight)
