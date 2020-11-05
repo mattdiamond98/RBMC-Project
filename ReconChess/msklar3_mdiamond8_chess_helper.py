@@ -1,5 +1,6 @@
 import numpy as np
 import chess
+import torch
 
 piece_map = {
     'P' : 1,
@@ -53,10 +54,19 @@ def empty_path_squares(move):
   y = chess.square_file(move.to_square) - chess.square_file(move.from_square)
   if x != 0 and y != 0 and abs(x) != abs(y): # knight move check
     return []
-  empty_squares = chess.between(move.from_square, move.to_square)
+  empty_squares = chess.SquareSet(between(move.from_square, move.to_square)).to_list()
   empty_squares.append(move.from_square)
   return empty_squares
-  
+
+# Generate the representation of the state for a neural network
+def gen_state(board, color):
+    board_array = fen_to_board(board)
+    player_layer = np.full((8,8), color)
+    
+    nn_state = torch.tensor([[board_array, player_layer]])
+    
+    return nn_state
+
 def fen_to_board(board):
     fen = board.fen()
     board = np.zeros((8,8))
@@ -76,7 +86,6 @@ def fen_to_board(board):
         else:
             board[y][x] = piece_map[c]
             x += 1
-
     return board
 
 def board_to_fen(board_state):
@@ -119,3 +128,6 @@ Transform an action id to a chess.Move object
 '''
 def action_to_move(action_id):
   pass
+def between(a, b):
+    bb = chess.BB_RAYS[a][b] & ((chess.BB_ALL << a) ^ (chess.BB_ALL << b))
+    return bb & (bb - 1)

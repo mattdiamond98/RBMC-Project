@@ -1,4 +1,4 @@
-from msklar3_mdiamond8_chess_helper import piece_equal, known_empty_squares
+from msklar3_mdiamond8_chess_helper import piece_equal, empty_path_squares, gen_state
 import random
 
 class ParticleFilter():
@@ -17,7 +17,11 @@ class ParticleFilter():
       
       Goal is to update the particles based on how we believe opponents moved and update the weights accordingly
     """
-    pass
+    return
+    for i, (board,weight) in enumerate(self.particles):
+      state = gen_state(board, not self.color)
+      policy = network.PolicyForward(state)
+      
   
   def update_sense_result(self, sense_result):
     """
@@ -58,7 +62,9 @@ class ParticleFilter():
       :param captured_piece: bool - true if you captured your opponents piece
       :param captured_square: chess.Square - position where you captured the piece
     """
-    empty_squares = known_empty_squares(taken_move) # list of squares we know are empty based on our move
+    if taken_move == None:
+      return # TODO: update in case a move was attempted but blocked unexpectedly
+    empty_squares = empty_path_squares(taken_move) # list of squares we know are empty based on our move
     
     for i, (board, weight) in enumerate(self.particles):
       new_weight = 1
@@ -77,7 +83,7 @@ class ParticleFilter():
     self.update_particles_by_weight()
     self.normalize_particles()
       
-  def sample_from_particles(self, K):
+  def sample_from_particles(self, K=1):
     """
     Sample randomly from the particles based on their weights
 
@@ -85,7 +91,7 @@ class ParticleFilter():
    
     :return: list(tuple(board, int)) -- the particle returned in the form (board, weight)
     """
-    return random.choices(self.particles, (weight for (board, weight) in self.particles), K)
+    return random.choices(self.particles, weights=[weight for (board, weight) in self.particles], k=K)
     
   def update_particles_by_weight(self):
     """
