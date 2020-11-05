@@ -98,11 +98,9 @@ class MagnusDLuffy(Player):
         :condition: If you intend to move a pawn for promotion other than Queen, please specify the promotion parameter
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
-        # TODO: update this method
         action = self.pick_action(self.gen_state(self.board))
-        print(action)
-        self.mcts.to_string()
-        choice = random.choice(possible_moves)
+        choice = chess_helper.action_map(action[0])
+
         return choice
         
     def handle_move_result(self, requested_move, taken_move, reason, captured_piece, captured_square):
