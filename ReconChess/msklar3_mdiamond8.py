@@ -18,6 +18,7 @@ import torch
 import msklar3_mdiamond8_chess_helper as chess_helper
 import msklar3_mdiamond8_config as config
 import msklar3_mdiamond8_mcts as mcts
+import msklar3_mdiamond8_memory as memory
 import msklar3_mdiamond8_nn as nn
 from msklar3_mdiamond8_particle_filter import ParticleFilter
 from player import Player
@@ -30,6 +31,7 @@ class MagnusDLuffy(Player):
     def __init__(self):
         self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
         self.mcts = None
+        self.game_history = memory.GameMemory()
         
     def handle_game_start(self, color, board):
         """
@@ -96,6 +98,8 @@ class MagnusDLuffy(Player):
         action = self.pick_action(self.gen_state(self.board))
         choice = chess_helper.action_map(action[0])
 
+
+
         return choice
         
     def handle_move_result(self, requested_move, taken_move, reason, captured_piece, captured_square):
@@ -120,7 +124,19 @@ class MagnusDLuffy(Player):
         """
         print("I'm gonna be king of the chess players!")
 
+    '''
+    Pick an action and get data for memory.
+
+    Returns a tuple containing:
+        0 -> the id of the selected action
+        1 -> the value of the state from the neural network
+        2 -> the probability distribution from the neural network
+        3 -> the probability distribution from the MCTS
+    '''
     def pick_action(self, state):
+        # Get value of the state from the neural network and probability distsribution from the neural network
+        nn_policy, nn_value = self.network.forward(state)
+
         # Create MCT
         root = mcts.Node(state)
         self.mcts = mcts.MCTS(root, self.color)
@@ -130,9 +146,9 @@ class MagnusDLuffy(Player):
             self.simulate()
 
         # Choose the optimal action given the MCT
-        action = self.select_move(config.TAU)
+        action, pi = self.select_move(config.TAU)
 
-        return action
+        return action, nn_value, nn_policy, pi
 
     def simulate(self):
         # Selection
@@ -160,6 +176,10 @@ class MagnusDLuffy(Player):
 
         return pi, v
 
+    '''
+    Select a move to use and return the action to make the move and probability
+    distribution of the policies.
+    '''
     def select_move(self, tau):
         pi, values = self.policy(tau)
 
@@ -173,7 +193,7 @@ class MagnusDLuffy(Player):
 
         print('selected move from action:', action, 'with value:', value)
 
-        return action, value
+        return action, pi
 
     # Generate pi and get values to pass through
     def policy(self, tau):
