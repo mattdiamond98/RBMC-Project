@@ -16,8 +16,9 @@ import numpy as np
 
 import msklar3_mdiamond8_config as config
 import msklar3_mdiamond8_mcts as mcts
+import msklar3_mdiamond8_memory as memory
 import msklar3_mdiamond8_nn as nn
-from msklar3_mdiamond8_chess_helper import gen_state
+from msklar3_mdiamond8_chess_helper import action_map, fen_to_board, gen_state
 from msklar3_mdiamond8_particle_filter import ParticleFilter
 from player import Player
 
@@ -29,6 +30,7 @@ class MagnusDLuffy(Player):
     def __init__(self):
         self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
         self.mcts = None
+        self.game_history = memory.GameMemory()
         
     def handle_game_start(self, color, board):
         """
@@ -38,6 +40,7 @@ class MagnusDLuffy(Player):
         :param board: chess.Board -- initial board state
         :return:
         """
+        self.color = color
         self.state = ParticleFilter(board, color)
      
     def handle_opponent_move_result(self, captured_piece, captured_square):
@@ -95,9 +98,17 @@ class MagnusDLuffy(Player):
 
         # NOTE: for training, we randomly sample but for tournament we should select the most likely always
         sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
-        action = self.pick_action(gen_state(sample, self.state.color))
-        self.mcts.to_string()
-        choice = random.choice(possible_moves)
+        state = gen_state(sample, self.state.color)
+        action = self.pick_action(state)
+
+        self.game_history.add_turn(memory.TurnMemory(
+            state,
+            action[1],
+            action[2],
+            action[3]
+        ))
+
+        choice = action_map(action[0])
         return choice
         
     def handle_move_result(self, requested_move, taken_move, reason, captured_piece, captured_square):
@@ -122,7 +133,23 @@ class MagnusDLuffy(Player):
         """
         print("I'm gonna be king of the chess players!")
 
+        self.game_history.v = int(self.color == winner_color)
+
+        print(self.game_history.to_string())
+
+    '''
+    Pick an action and get data for memory.
+
+    Returns a tuple containing:
+        0 -> the id of the selected action
+        1 -> the value of the state from the neural network
+        2 -> the probability distribution from the neural network
+        3 -> the probability distribution from the MCTS
+    '''
     def pick_action(self, state):
+        # Get value of the state from the neural network and probability distsribution from the neural network
+        nn_policy, nn_value = self.network.forward(state)
+
         # Create MCT
         root = mcts.Node(state)
         self.mcts = mcts.MCTS(root, self.state.color)
@@ -132,9 +159,9 @@ class MagnusDLuffy(Player):
             self.simulate(state)
 
         # Choose the optimal action given the MCT
-        action = self.select_move(config.TAU)
+        action, pi = self.select_move(config.TAU)
 
-        return action
+        return action, nn_value, nn_policy, pi
 
     def simulate(self, state):
         # Selection
@@ -162,6 +189,10 @@ class MagnusDLuffy(Player):
 
         return pi, v
 
+    '''
+    Select a move to use and return the action to make the move and probability
+    distribution of the policies.
+    '''
     def select_move(self, tau):
         pi, values = self.policy(tau)
 
@@ -175,7 +206,7 @@ class MagnusDLuffy(Player):
 
         print('selected move from action:', action, 'with value:', value)
 
-        return action, value
+        return action, pi
 
     # Generate pi and get values to pass through
     def policy(self, tau):

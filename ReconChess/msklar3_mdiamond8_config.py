@@ -3,3 +3,5 @@ MCTS_SIMULATIONS = 100
 TAU = 0.5   # Move selection exploration
 
 SIMULATION_EXPANSION = 10
+
+GAMES_PER_EPOCH = 1000  # Games played before training network

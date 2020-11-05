@@ -21,7 +21,7 @@ class ParticleFilter():
     for i, (board,weight) in enumerate(self.particles):
       state = gen_state(board, not self.color)
       policy = network.PolicyForward(state).detach().numpy()
-      move = random.choice()
+      return
       
   
   def update_sense_result(self, sense_result):
