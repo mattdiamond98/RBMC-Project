@@ -17,7 +17,7 @@ import numpy as np
 import msklar3_mdiamond8_config as config
 import msklar3_mdiamond8_mcts as mcts
 import msklar3_mdiamond8_nn as nn
-from msklar3_mdiamond8_chess_helper import gen_state, fen_to_board
+from msklar3_mdiamond8_chess_helper import gen_state
 from msklar3_mdiamond8_particle_filter import ParticleFilter
 from player import Player
 

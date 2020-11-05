@@ -54,9 +54,9 @@ def empty_path_squares(move):
   y = chess.square_file(move.to_square) - chess.square_file(move.from_square)
   if x != 0 and y != 0 and abs(x) != abs(y): # knight move check
     return []
-  empty_squares = chess.SquareSet(between(move.from_square, move.to_square)).to_list()
-  empty_squares.append(move.from_square)
-  return empty_squares
+  empty_squares = chess.SquareSet(between(move.from_square, move.to_square))
+  empty_squares.add(move.from_square)
+  return list(empty_squares)
 
 # Generate the representation of the state for a neural network
 def gen_state(board, color):

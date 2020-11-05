@@ -1,5 +1,6 @@
 from msklar3_mdiamond8_chess_helper import piece_equal, empty_path_squares, gen_state
 import random
+import numpy as np
 
 class ParticleFilter():
   def __init__(self, board, color, N=500):
@@ -17,10 +18,10 @@ class ParticleFilter():
       
       Goal is to update the particles based on how we believe opponents moved and update the weights accordingly
     """
-    return
     for i, (board,weight) in enumerate(self.particles):
       state = gen_state(board, not self.color)
-      policy = network.PolicyForward(state)
+      policy = network.PolicyForward(state).detach().numpy()
+      move = random.choice()
       
   
   def update_sense_result(self, sense_result):
