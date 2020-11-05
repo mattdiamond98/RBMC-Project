@@ -96,7 +96,7 @@ class MagnusDLuffy(Player):
         # TODO: update this method
         action = self.pick_action(self.gen_state(self.board))
         print(action)
-        # self.mcts.to_string()
+        self.mcts.to_string()
         choice = random.choice(possible_moves)
         return choice
         
@@ -134,29 +134,25 @@ class MagnusDLuffy(Player):
         # Choose the optimal action given the MCT
         action = self.select_move(config.TAU)
 
-        # Take action and get next state
-
         return action
-
 
     def simulate(self):
         # Selection
         leaf, path = self.mcts.select()
 
-        # Evaluation and Expansion TODO: Expansion
+        # Evaluation
         pi, v = self.evaluate_leaf(leaf)
 
-        # TODO: Filter out impossible moves?
-        # possible_moves = self.board.legal_moves
+        # Expansion
+        best_policies = np.argpartition(
+            pi.detach().numpy(), config.SIMULATION_EXPANSION)[-config.SIMULATION_EXPANSION:]
 
-        # TODO: Add policies to MCTS
-        # this is wrong just placeholder, actions here don't mean anything
-        for action, prob in enumerate(pi):
+        for action_id in best_policies:
             self.mcts.leaf.edges.append(mcts.Edge(
                 self.mcts.leaf,
                 mcts.Node(self.state),
-                action,
-                prob))
+                action_id,
+                pi[action_id]))    
 
         # Backup
         self.mcts.backfill(v, path)

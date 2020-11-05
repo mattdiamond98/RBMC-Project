@@ -52,7 +52,7 @@ def empty_path_squares(move):
   x = chess.square_rank(move.to_square) - chess.square_rank(move.from_square)
   y = chess.square_file(move.to_square) - chess.square_file(move.from_square)
   if x != 0 and y != 0 and abs(x) != abs(y): # knight move check
-    return [] 
+    return []
   empty_squares = chess.between(move.from_square, move.to_square)
   empty_squares.append(move.from_square)
   return empty_squares
