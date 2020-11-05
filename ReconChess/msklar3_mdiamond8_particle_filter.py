@@ -7,16 +7,17 @@ class ParticleFilter():
     self.particles = [(board.copy(), 1/N) for _ in range(N)]
     self.N = N
   
-  def update_opponent_move_result(self, captured_piece, captured_square):
+  def update_opponent_move_result(self, captured_piece, captured_square, network):
     """
       This function is called at the start of your turn and gives you the chance to update your board.
 
       :param captured_piece: bool - true if your opponents captured your piece with their last move
       :param captured_square: chess.Square - position where your piece was captured
+      :param network: Net - our neural network for predicting opponent move distribution
       
       Goal is to update the particles based on how we believe opponents moved and update the weights accordingly
     """
-    
+    pass
   
   def update_sense_result(self, sense_result):
     """

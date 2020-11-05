@@ -19,6 +19,7 @@ import msklar3_mdiamond8_chess_helper as chess_helper
 import msklar3_mdiamond8_config as config
 import msklar3_mdiamond8_mcts as mcts
 import msklar3_mdiamond8_nn as nn
+from msklar3_mdiamond8_particle_filter import ParticleFilter
 from player import Player
 
 MOVE_OPTIONS = 64 * 64
@@ -38,11 +39,7 @@ class MagnusDLuffy(Player):
         :param board: chess.Board -- initial board state
         :return:
         """
-        # WHITE = 0; BLACK = 1
-        self.color = 0 if color == chess.WHITE else 1
-        self.curr_color = 0
-        self.board = board  # this is test code
-        self.state = self.gen_state(None)    # this is temp TODO: deletex
+        self.state = ParticleFilter(color, board)
      
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
@@ -51,7 +48,7 @@ class MagnusDLuffy(Player):
         :param captured_piece: bool - true if your opponents captured your piece with their last move
         :param captured_square: chess.Square - position where your piece was captured
         """
-        pass
+        self.state.update_opponent_move_result(captured_piece, captured_square)
 
     def choose_sense(self, possible_sense, possible_moves, seconds_left):
         """
@@ -81,9 +78,7 @@ class MagnusDLuffy(Player):
             (A6, None), (B6, None), (C8, None)
         ]
         """
-        # TODO: implement this method
-        # Hint: until this method is implemented, any senses you make will be lost.
-        pass
+        self.state.update_sense_result(sense_result)
 
     def choose_move(self, possible_moves, seconds_left):
         """
@@ -116,8 +111,7 @@ class MagnusDLuffy(Player):
         :param captured_piece: bool - true if you captured your opponents piece
         :param captured_square: chess.Square - position where you captured the piece
         """
-        # TODO: implement this method
-        pass
+        self.particle_filter.update_handle_move_result(taken_move, captured_piece, captured_square)
         
     def handle_game_end(self, winner_color, win_reason):  # possible GameHistory object...
         """
@@ -206,9 +200,9 @@ class MagnusDLuffy(Player):
         return pi, values
 
     # Generate the representation of the state for a neural network
-    def gen_state(self, node):
-        board_array = chess_helper.fen_to_board(self.board)
-        player_layer = np.full((8,8), self.curr_color)
+    def gen_state(self, node, board, color):
+        board_array = chess_helper.fen_to_board(board)
+        player_layer = np.full((8,8), color)
         
         nn_state = torch.tensor([[board_array, player_layer]])
         
