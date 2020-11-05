@@ -32,9 +32,6 @@ board_map = {
     12 : 'k',
 }
 
-def reverse(piece): # integer reversal
-  return (piece + 6) % 12
-
 def piece_equal(piece1, piece2):
   if piece1 is None:
     return piece2 is None
@@ -57,7 +54,7 @@ def empty_path_squares(move):
   y = chess.square_file(move.to_square) - chess.square_file(move.from_square)
   if x != 0 and y != 0 and abs(x) != abs(y): # knight move check
     return []
-  empty_squares = chess.between(move.from_square, move.to_square)
+  empty_squares = chess.SquareSet(between(move.from_square, move.to_square)).to_list()
   empty_squares.append(move.from_square)
   return empty_squares
 
@@ -70,7 +67,7 @@ def gen_state(board, color):
     
     return nn_state
 
-def fen_to_board(board, reverse=False):
+def fen_to_board(board):
     fen = board.fen()
     board = np.zeros((8,8))
 
@@ -87,7 +84,7 @@ def fen_to_board(board, reverse=False):
             y += 1
             x = 0
         else:
-            board[y][x] = reverse(piece_map[c]) if reverse else piece_map[c]
+            board[y][x] = piece_map[c]
             x += 1
     return board
 
@@ -112,3 +109,7 @@ def board_to_fen(board_state):
         fen += '{} - - 0 1'.format('w' if color == 0 else 'b')
 
         return fen
+
+def between(a, b):
+    bb = chess.BB_RAYS[a][b] & ((chess.BB_ALL << a) ^ (chess.BB_ALL << b))
+    return bb & (bb - 1)

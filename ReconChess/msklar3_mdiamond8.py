@@ -17,7 +17,7 @@ import numpy as np
 import msklar3_mdiamond8_config as config
 import msklar3_mdiamond8_mcts as mcts
 import msklar3_mdiamond8_nn as nn
-from msklar3_mdiamond8_chess_helper import gen_state
+from msklar3_mdiamond8_chess_helper import gen_state, fen_to_board
 from msklar3_mdiamond8_particle_filter import ParticleFilter
 from player import Player
 
@@ -38,7 +38,7 @@ class MagnusDLuffy(Player):
         :param board: chess.Board -- initial board state
         :return:
         """
-        self.state = ParticleFilter(color, board)
+        self.state = ParticleFilter(board, color)
      
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
@@ -92,9 +92,10 @@ class MagnusDLuffy(Player):
         :condition: If you intend to move a pawn for promotion other than Queen, please specify the promotion parameter
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
-        # TODO: update this method
-        action = self.pick_action(gen_state(self.board))
-        print(action)
+
+        # NOTE: for training, we randomly sample but for tournament we should select the most likely always
+        sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
+        action = self.pick_action(gen_state(sample, self.state.color))
         self.mcts.to_string()
         choice = random.choice(possible_moves)
         return choice
@@ -110,7 +111,7 @@ class MagnusDLuffy(Player):
         :param captured_piece: bool - true if you captured your opponents piece
         :param captured_square: chess.Square - position where you captured the piece
         """
-        self.particle_filter.update_handle_move_result(taken_move, captured_piece, captured_square)
+        self.state.update_handle_move_result(taken_move, captured_piece, captured_square)
         
     def handle_game_end(self, winner_color, win_reason):  # possible GameHistory object...
         """
@@ -124,18 +125,18 @@ class MagnusDLuffy(Player):
     def pick_action(self, state):
         # Create MCT
         root = mcts.Node(state)
-        self.mcts = mcts.MCTS(root, self.color)
+        self.mcts = mcts.MCTS(root, self.state.color)
 
         # Train the MCT
         for _ in range(config.MCTS_SIMULATIONS):
-            self.simulate()
+            self.simulate(state)
 
         # Choose the optimal action given the MCT
         action = self.select_move(config.TAU)
 
         return action
 
-    def simulate(self):
+    def simulate(self, state):
         # Selection
         leaf, path = self.mcts.select()
 
@@ -149,7 +150,7 @@ class MagnusDLuffy(Player):
         for action_id in best_policies:
             self.mcts.leaf.edges.append(mcts.Edge(
                 self.mcts.leaf,
-                mcts.Node(self.state),
+                mcts.Node(state),
                 action_id,
                 pi[action_id]))    
 
