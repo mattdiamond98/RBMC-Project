@@ -18,7 +18,7 @@ import msklar3_mdiamond8_config as config
 import msklar3_mdiamond8_mcts as mcts
 import msklar3_mdiamond8_memory as memory
 import msklar3_mdiamond8_nn as nn
-from msklar3_mdiamond8_chess_helper import gen_state, fen_to_board
+from msklar3_mdiamond8_chess_helper import action_map, fen_to_board, gen_state
 from msklar3_mdiamond8_particle_filter import ParticleFilter
 from player import Player
 
@@ -40,6 +40,7 @@ class MagnusDLuffy(Player):
         :param board: chess.Board -- initial board state
         :return:
         """
+        self.color = color
         self.state = ParticleFilter(board, color)
      
     def handle_opponent_move_result(self, captured_piece, captured_square):
@@ -97,9 +98,17 @@ class MagnusDLuffy(Player):
 
         # NOTE: for training, we randomly sample but for tournament we should select the most likely always
         sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
-        action = self.pick_action(gen_state(sample, self.state.color))
-        self.mcts.to_string()
-        choice = random.choice(possible_moves)
+        state = gen_state(sample, self.state.color)
+        action = self.pick_action(state)
+
+        self.game_history.add_turn(memory.TurnMemory(
+            state,
+            action[1],
+            action[2],
+            action[3]
+        ))
+
+        choice = action_map(action[0])
         return choice
         
     def handle_move_result(self, requested_move, taken_move, reason, captured_piece, captured_square):
@@ -123,6 +132,10 @@ class MagnusDLuffy(Player):
         :param win_reason: String -- the reason for the game ending
         """
         print("I'm gonna be king of the chess players!")
+
+        self.game_history.v = int(self.color == winner_color)
+
+        print(self.game_history.to_string())
 
     '''
     Pick an action and get data for memory.
