@@ -21,8 +21,7 @@ import msklar3_mdiamond8_mcts as mcts
 import msklar3_mdiamond8_nn as nn
 from player import Player
 
-# Shown in excel document
-MOVE_OPTIONS = 137
+MOVE_OPTIONS = 64 * 64
 IN_CHANNELS = 2
 
 class MagnusDLuffy(Player):
@@ -39,10 +38,11 @@ class MagnusDLuffy(Player):
         :param board: chess.Board -- initial board state
         :return:
         """
-        self.color = color
+        # WHITE = 0; BLACK = 1
+        self.color = 0 if color == chess.WHITE else 1
+        self.curr_color = 0
         self.board = board  # this is test code
-        self.gen_state()
-        self.evaluate_state()
+        self.state = self.gen_state(None)    # this is temp TODO: deletex
      
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
@@ -99,6 +99,9 @@ class MagnusDLuffy(Player):
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
         # TODO: update this method
+        action = self.pick_action(self.gen_state(self.board))
+        print(action)
+        # self.mcts.to_string()
         choice = random.choice(possible_moves)
         return choice
         
@@ -125,30 +128,89 @@ class MagnusDLuffy(Player):
         """
         print("I'm gonna be king of the chess players!")
 
-    def pick_action(self, state, t):
-        # TODO: Decide if we will use id
+    def pick_action(self, state):
         # Create MCT
-        self.root = mcts.Node(state, 0)
-        self.mcts = mcts.MCTS(self.root)
+        root = mcts.Node(state)
+        self.mcts = mcts.MCTS(root, self.color)
 
+        # Train the MCT
         for _ in range(config.MCTS_SIMULATIONS):
             self.simulate()
 
+        # Choose the optimal action given the MCT
+        action = self.select_move(config.TAU)
+
+        # Take action and get next state
+
+        return action
+
+
     def simulate(self):
+        # Selection
         leaf, path = self.mcts.select()
 
-    def evaluate_state(self):
-        state = self.gen_state()
+        # Evaluation and Expansion TODO: Expansion
+        pi, v = self.evaluate_leaf(leaf)
 
-        pi, v = self.network.forward(state)
-        
         # TODO: Filter out impossible moves?
+        # possible_moves = self.board.legal_moves
+
+        # TODO: Add policies to MCTS
+        # this is wrong just placeholder, actions here don't mean anything
+        for action, prob in enumerate(pi):
+            self.mcts.leaf.edges.append(mcts.Edge(
+                self.mcts.leaf,
+                mcts.Node(self.state),
+                action,
+                prob))
+
+        # Backup
+        self.mcts.backfill(v, path)
+
+    def evaluate_leaf(self, leaf):
+        pi, v = self.network.forward(leaf.state)
+
+        return pi, v
+
+    def select_move(self, tau):
+        pi, values = self.policy(tau)
+
+        if tau == 0:    # Deterministic
+            action = random.choice(np.anywhere(pi == max(pi)))
+        else:           # Stochastically
+            action_id = np.random.multinomial(1, pi)
+            action = np.where(action_id == 1)[0][0]
+
+        value = values[action]
+
+        print('selected move from action:', action, 'with value:', value)
+
+        return action, value
+
+    # Generate pi and get values to pass through
+    def policy(self, tau):
+        edges = self.mcts.root.edges
+        pi = np.zeros(MOVE_OPTIONS, dtype=np.float32)
+        values = np.zeros(MOVE_OPTIONS, dtype=np.float32)
+
+        for edge in edges:
+            values[edge.action] = edge.data['Q']
+
+            if tau == 0:
+                pi[edge.action] = edge.data['N']
+            else:
+                pi[edge.action] = pow(edge.data['N'], 1 / tau)
+
+        pi = pi / np.sum(pi)
+
+        return pi, values
 
     # Generate the representation of the state for a neural network
-    def gen_state(self):
+    def gen_state(self, node):
         board_array = chess_helper.fen_to_board(self.board)
-        # if 
-        nn_state = torch.tensor([[board_array, board_array]])
+        player_layer = np.full((8,8), self.curr_color)
+        
+        nn_state = torch.tensor([[board_array, player_layer]])
         
         return nn_state
 

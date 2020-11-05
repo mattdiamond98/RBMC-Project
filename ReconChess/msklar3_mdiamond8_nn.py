@@ -32,6 +32,9 @@ class Net(nn.Module):
         # Fully connected linear layer
         self.policy_linear = nn.Linear(128, policy_size, False)
 
+        # Softmax
+        self.policy_softmax = nn.Softmax(0)
+
     def ValueNet(self):
         # Convolutional Network: 1 filter, kernel size 1x1, stride 1
         self.value_conv = nn.Conv2d(
@@ -57,6 +60,7 @@ class Net(nn.Module):
 
         # Linear layer
         x = self.policy_linear(x.flatten())
+        x = self.policy_softmax(x)
 
         return x
 
