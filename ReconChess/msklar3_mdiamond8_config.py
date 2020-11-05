@@ -1,2 +1,3 @@
 EPSILON = 0.2
-MCTS_SIMULATIONS = 1000
+MCTS_SIMULATIONS = 100
+TAU = 0.5   # Move selection exploration

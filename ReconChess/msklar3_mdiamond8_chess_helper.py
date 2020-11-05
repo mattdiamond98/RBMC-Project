@@ -16,6 +16,21 @@ piece_map = {
     'k' : 12,
 }
 
+board_map = {
+    1 : 'P',
+    2 : 'R',
+    3 : 'N',
+    4 : 'B',
+    5 : 'Q',
+    6 : 'K',
+    7 : 'p',
+    8 : 'r',
+    9 : 'n',
+    10 : 'b',
+    11 : 'q',
+    12 : 'k',
+}
+
 def piece_equal(piece1, piece2):
   if piece1 is None:
     return piece2 is None
@@ -63,3 +78,25 @@ def fen_to_board(board):
             x += 1
 
     return board
+
+def board_to_fen(board_state):
+    fen = ""
+
+    board = board_state[0]
+    color = board_state[1][0][0]
+
+    for r in board:
+        empty_count = 0
+
+        for f in board:
+            if f == 0:
+                empty_count += 1
+            else:
+                if empty_count != 0:
+                    fen += str(empty_count)
+                    fen += board_map[f]
+        
+        fen += '/'
+        fen += '{} - - 0 1'.format('w' if color == 0 else 'b')
+
+        return fen

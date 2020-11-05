@@ -1,17 +1,27 @@
 import msklar3_mdiamond8_config as config
 
 class Node():
-    def __init__(self, state, id):
+    def __init__(self, state):
         self.state = state
-        self.id = id
 
         self.edges = []
 
     def is_leaf(self):
-        return self.edges == 0
+        return len(self.edges) == 0
 
-    def is_agent(self):
+    def color(self):
         return self.state[1][0][0]
+
+    def to_string(self):
+        print("node has state", self.state)
+        
+        for edge in self.edges:
+            print("    edge has values: N = {}, W = {}, Q = {}, P = {}".format(
+                edge.data['N'],
+                edge.data['W'],
+                edge.data['Q'],
+                edge.data['P'],
+            ))
 
 class Edge():
     def __init__(self, in_node, out_node, action, prior):
@@ -27,11 +37,11 @@ class Edge():
         }
 
 class MCTS():
-    def __init__(self, root):
+    def __init__(self, root, agent_color):
         self.root = root
         self.tree = {}
-
-        self.addNode(root)
+        self.agent_color = agent_color
+        self.leaf = None
 
     # Navigate to and select a leaf for expansion
     def select(self):
@@ -40,17 +50,19 @@ class MCTS():
 
         while not node.is_leaf():
             action = self.max_action(node.edges)
-
-            path.append(node)
+    
+            path.append(action)
             node = action.out_node
+
+        self.leaf = node
 
         return node, path
 
     # Update the Monte-Carle Tree based on simulation results
-    def backfill(self, leaf_node, v, path):
+    def backfill(self, v, path):
         for action in path:
             action.data['N'] = action.data['N'] + 1
-            action.data['W'] = action.data['W'] + v * action.in_node.is_agent()
+            action.data['W'] = action.data['W'] + v * self.agent_turn(action.in_node)
             action.data['Q'] = action.data['W'] / action.data['N']
             
 
@@ -76,3 +88,12 @@ class MCTS():
 
     def addNode(self, node):
         self.tree[node.id] = node
+
+    def agent_turn(self, node):
+        return 1 if node.color == self.agent_color else -1
+
+    def to_string(self):
+        q = [self.root]
+
+        for x in q:
+            x.to_string()
