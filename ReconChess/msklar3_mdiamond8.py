@@ -199,6 +199,7 @@ class MagnusDLuffy(Player):
         if tau == 0:    # Deterministic
             action = random.choice(np.anywhere(pi == max(pi)))
         else:           # Stochastically
+            print('sum: ', sum(pi))
             action_id = np.random.multinomial(1, pi)
             action = np.where(action_id == 1)[0][0]
 
@@ -211,7 +212,7 @@ class MagnusDLuffy(Player):
     # Generate pi and get values to pass through
     def policy(self, tau):
         edges = self.mcts.root.edges
-        pi = np.zeros(MOVE_OPTIONS, dtype=np.float32)
+        pi = np.zeros(MOVE_OPTIONS, dtype=np.double)
         values = np.zeros(MOVE_OPTIONS, dtype=np.float32)
 
         for edge in edges:

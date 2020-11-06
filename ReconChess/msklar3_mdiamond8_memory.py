@@ -40,4 +40,4 @@ class TurnMemory:
         self.p = p
 
     def to_string(self):
-        return '{ state: ' + self.state + ' v_t: ' + str(self.v_t) + ' pi: ' + str(self.pi) + ' p: ' + str(self.p) + ' }'
+        return '{ state: ' + str(self.state.detach()) + ' v_t: ' + str(self.v_t) + ' pi: ' + str(self.pi) + ' p: ' + str(self.p) + ' }'
