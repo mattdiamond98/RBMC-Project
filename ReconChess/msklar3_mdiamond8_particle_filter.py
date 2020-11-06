@@ -1,6 +1,7 @@
-from msklar3_mdiamond8_chess_helper import piece_equal, empty_path_squares, gen_state
+from msklar3_mdiamond8_chess_helper import piece_equal, empty_path_squares, gen_state, move_to_action
 import random
 import numpy as np
+from sklearn.preprocessing import normalize
 
 class ParticleFilter():
   def __init__(self, board, color, N=500):
@@ -19,9 +20,29 @@ class ParticleFilter():
       Goal is to update the particles based on how we believe opponents moved and update the weights accordingly
     """
     for i, (board,weight) in enumerate(self.particles):
+      board.turn = not self.color
+      possible_moves = list(board.generate_pseudo_legal_moves())
+      
+      if captured_piece:
+        f = lambda move: move.to_square == captured_square
+        possible_moves = list(filter(f, possible_moves))
+      
       state = gen_state(board, not self.color)
       policy = network.PolicyForward(state).detach().numpy()
-      return
+      
+      possible_move_weights = np.ndarray(len(possible_moves))
+      for i,move in enumerate(possible_moves):
+        possible_move_weights[i] = policy[move_to_action(move)]
+      
+      if np.all(possible_move_weights == 0):
+        weight *= 0.00001
+      else:
+        move = np.random.choice(possible_moves, p=possible_move_weights / np.sum(possible_move_weights))
+        weight *= policy[move_to_action(move)]
+        board.push(move)
+      self.particles[i] = (board, weight)
+    
+      
       
   
   def update_sense_result(self, sense_result):

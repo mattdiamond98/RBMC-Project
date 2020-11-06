@@ -116,18 +116,14 @@ chess.Move objects as (from_square, to_square).
 '''
 def action_map(action_id):
   from_square_id = action_id % 64
-  to_square_id = np.floor(action_id / 64)
+  to_square_id = int(np.floor(action_id / 64))
+  
+  return chess.Move(from_square_id, to_square_id)
 
-  from_square = chess.Square(from_square_id)
-  to_square = chess.Square(to_square_id)
-
-  return chess.Move(from_square, to_square)
-
-'''
-Transform an action id to a chess.Move object
-'''
-def action_to_move(action_id):
-  pass
+def move_to_action(move):
+  return move.from_square * 64 + move.to_square
+  
+  
 def between(a, b):
     bb = chess.BB_RAYS[a][b] & ((chess.BB_ALL << a) ^ (chess.BB_ALL << b))
     return bb & (bb - 1)
