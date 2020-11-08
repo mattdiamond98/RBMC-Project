@@ -4,4 +4,4 @@ TAU = 0.5   # Move selection exploration
 
 SIMULATION_EXPANSION = 10
 
-GAMES_PER_EPOCH = 1000  # Games played before training network
+GAMES_PER_EPOCH = 1  # Games played before training network
