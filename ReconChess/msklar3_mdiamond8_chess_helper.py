@@ -125,5 +125,8 @@ def move_to_action(move):
   
   
 def between(a, b):
+  try:
     bb = chess.BB_RAYS[a][b] & ((chess.BB_ALL << a) ^ (chess.BB_ALL << b))
     return bb & (bb - 1)
+  except:
+    print("DEBUG between(a,b) (type(a), type(b), a, b)", type(a), type(b), a, b)
