@@ -1,6 +1,7 @@
 EPSILON = 0.2
 MCTS_SIMULATIONS = 100
 TAU = 0.5   # Move selection exploration
+LOG_EPSILON = 1e-15 # Add to probailities so you never take log 0
 
 SIMULATION_EXPANSION = 10
 

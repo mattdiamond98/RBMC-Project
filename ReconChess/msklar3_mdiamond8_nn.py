@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import msklar3_mdiamond8_config as config
+
+
 class Net(nn.Module):
     def __init__(self, in_channels, policy_size):
         super(Net, self).__init__()
@@ -122,14 +125,14 @@ class Net(nn.Module):
         return x
 
     def loss(self, v, v_hat, pi, p):
+        for i, probability in enumerate(p):
+            if probability <= 1 - config.LOG_EPSILON:
+                p[i] += config.LOG_EPSILON
+
         prediction_mse = torch.sum((v - v_hat)**2)
-        # probability_log = torch.sum(torch.transpose(pi, -1, 0) * torch.log(torch.from_numpy(p)))
-        # self.cross_entropy = nn.CrossEntropyLoss()
-        # probability_log = self.cross_entropy(pi, p)
+        probability_log = torch.sum(torch.transpose(pi, -1, 0) * torch.log(p))
 
         # TODO: Implement L2 normalization
-        # return prediction_mse - probability_log
-        # return probability_log
-        return prediction_mse
+        return prediction_mse + probability_log
 
         
