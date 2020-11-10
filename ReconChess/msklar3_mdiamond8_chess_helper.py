@@ -123,7 +123,7 @@ def action_map(action_id):
 def move_to_action(move):
   return move.from_square * 64 + move.to_square
   
-  
+  # TODO: This crashed because of the << (maybe a | b == 0?)
 def between(a, b):
   try:
     bb = chess.BB_RAYS[a][b] & ((chess.BB_ALL << a) ^ (chess.BB_ALL << b))

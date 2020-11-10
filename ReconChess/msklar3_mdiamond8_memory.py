@@ -17,10 +17,10 @@ class GameMemory:
     def to_string(self):
         string = ''
         
-        string += 'value: ' + str(self.v) + '\n'
+        string += '{value}\n'.format(value=self.v)
         
         for turn in self.turns:
-            string += '    turn: ' + turn.to_string() + '\n'
+            string += turn.to_string()
 
         return string
 
@@ -30,7 +30,6 @@ class TurnMemory:
 
     state := state of the game
     v_t := prediction outcome of the game at timestep t
-    pi := probability distribution from NN for a state s at time step t
     p := probability distribution from MCTS of taking actions at time step t
     '''
     def __init__(self, state, v_t, pi, p):
@@ -40,4 +39,9 @@ class TurnMemory:
         self.p = p
 
     def to_string(self):
-        return '{ state: ' + self.state + ' v_t: ' + str(self.v_t) + ' pi: ' + str(self.pi) + ' p: ' + str(self.p) + ' }'
+        return '{state}, {v_t}, {pi}, {p}\n'.format(
+            state=str(self.state.detach()),
+            v_t = str(self.v_t),
+            pi=str(self.pi),
+            p=str(self.p)
+        )

@@ -9,15 +9,20 @@ Description:    Python file for my agent.
 Source:         Adapted from recon-chess (https://pypi.org/project/reconchess/)
 """
 
+import os.path as path
 import random
+import time
+from datetime import datetime
 
 import chess
 import numpy as np
+import torch
 
 import msklar3_mdiamond8_config as config
 import msklar3_mdiamond8_mcts as mcts
 import msklar3_mdiamond8_memory as memory
 import msklar3_mdiamond8_nn as nn
+import msklar3_mdiamond8_teacher as teacher
 from msklar3_mdiamond8_chess_helper import action_map, fen_to_board, gen_state
 from msklar3_mdiamond8_particle_filter import ParticleFilter
 from player import Player
@@ -28,7 +33,12 @@ IN_CHANNELS = 2
 class MagnusDLuffy(Player):
 
     def __init__(self):
-        self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
+        # self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
+        try:
+            self.network = torch.load('network.torch')
+        except:
+            print('failed to find network.torch')
+            self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
         self.mcts = None
         self.game_history = memory.GameMemory()
         
@@ -105,7 +115,7 @@ class MagnusDLuffy(Player):
             state,
             action[1],
             action[2],
-            action[3]
+            torch.tensor(action[3])
         ))
 
         choice = action_map(action[0])
@@ -131,11 +141,13 @@ class MagnusDLuffy(Player):
         :param winner_color: Chess.BLACK/chess.WHITE -- the winning color
         :param win_reason: String -- the reason for the game ending
         """
+        self.game_history.v = torch.tensor([int(self.color == winner_color)], dtype=torch.float32)
+
+        torch.save(self.network, 'network.torch')
+
         print("I'm gonna be king of the chess players!")
 
-        self.game_history.v = int(self.color == winner_color)
-
-        print(self.game_history.to_string())
+        return self.game_history
 
     '''
     Pick an action and get data for memory.
@@ -199,6 +211,7 @@ class MagnusDLuffy(Player):
         if tau == 0:    # Deterministic
             action = random.choice(np.anywhere(pi == max(pi)))
         else:           # Stochastically
+            print('sum: ', sum(pi))
             action_id = np.random.multinomial(1, pi)
             action = np.where(action_id == 1)[0][0]
 
@@ -211,7 +224,7 @@ class MagnusDLuffy(Player):
     # Generate pi and get values to pass through
     def policy(self, tau):
         edges = self.mcts.root.edges
-        pi = np.zeros(MOVE_OPTIONS, dtype=np.float32)
+        pi = np.zeros(MOVE_OPTIONS, dtype=np.double)
         values = np.zeros(MOVE_OPTIONS, dtype=np.float32)
 
         for edge in edges:
@@ -225,3 +238,4 @@ class MagnusDLuffy(Player):
         pi = pi / np.sum(pi)
 
         return pi, values
+
