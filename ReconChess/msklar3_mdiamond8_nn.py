@@ -131,8 +131,8 @@ class Net(nn.Module):
 
         prediction_mse = torch.sum((v - v_hat)**2)
         probability_log = torch.sum(torch.transpose(pi, -1, 0) * torch.log(p))
+        l2_norm = config.LAMBDA * torch.norm(p)
 
-        # TODO: Implement L2 normalization
-        return prediction_mse + probability_log
+        return prediction_mse + probability_log + l2_norm
 
         

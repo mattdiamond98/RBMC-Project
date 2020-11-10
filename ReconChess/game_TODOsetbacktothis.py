@@ -17,7 +17,6 @@ class Game:
 
     def __init__(self, seconds_left=600):
         self.turn = chess.WHITE  # True for white, False for black
-        self.full_turn_count = 0
 
         self.truth_board = chess.Board()
         self.white_board = chess.Board()
@@ -297,7 +296,6 @@ class Game:
         self.seconds_left_by_color[self.turn] -= elapsed.total_seconds()
 
         self.turn = not self.turn
-        self.full_turn_count += 1
         self.current_turn_start_time = datetime.now()
         
     def is_over(self):
@@ -311,8 +309,7 @@ class Game:
 
         no_time_left = self.seconds_left_by_color[chess.WHITE] <= 0 or self.seconds_left_by_color[chess.BLACK] <= 0
         king_captured = self.truth_board.king(chess.WHITE) is None or self.truth_board.king(chess.BLACK) is None
-        too_many_turns = self.full_turn_count == 100
-        return no_time_left or king_captured or too_many_turns
+        return no_time_left or king_captured
         
     def get_winner(self):
         """
@@ -332,7 +329,3 @@ class Game:
             return chess.BLACK, "BLACK won by king capture."
         elif self.truth_board.king(chess.BLACK) is None:
             return chess.WHITE, "WHITE won by king capture."
-
-        if self.full_turn_count == 100:
-            return chess.BLACK, "BLACK won by draw REMOVE THIS"
-        

@@ -33,7 +33,6 @@ IN_CHANNELS = 2
 class MagnusDLuffy(Player):
 
     def __init__(self):
-        # self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
         try:
             self.network = torch.load('network.torch')
         except:
@@ -113,8 +112,6 @@ class MagnusDLuffy(Player):
 
         self.game_history.add_turn(memory.TurnMemory(
             state,
-            action[1],
-            action[2],
             torch.tensor(action[3])
         ))
 
@@ -191,7 +188,7 @@ class MagnusDLuffy(Player):
                 self.mcts.leaf,
                 mcts.Node(state),
                 action_id,
-                pi[action_id]))    
+                pi[action_id]))
 
         # Backup
         self.mcts.backfill(v, path)
