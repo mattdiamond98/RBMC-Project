@@ -27,6 +27,7 @@ class Teacher():
         self.optimizer = optim.Adam(self.network.parameters(), lr=0.01)
 
     def epoch(self):
+        print('loss ---------------------')
         for _ in range(self.games_per_epoch):
             self.play_game()
 
@@ -75,17 +76,24 @@ class Teacher():
         training_turn_count = min(config.TRAINING_TURNS_PER_EPOCH, len(turn_list))
         training_turns = np.random.randint(0, len(turn_list), size=(training_turn_count,))
 
-        for turn in training_turns:
-            self.optimizer.zero_grad()
+        pi_list = []
+        v_list = []
 
+        for turn in training_turns:
             turn_data = turn_list[turn]
 
             pi, v = self.network.forward(turn_data[0].state)
 
-            loss = self.network.loss(v, turn_data[1], pi, turn_data[0].p)
-            print('loss', loss)
-            loss.backward(retain_graph=True)
-            self.optimizer.step()
+            pi_list.append(pi)
+            v_list.append(v)
+
+        self.optimizer.zero_grad()
+
+        loss = self.network.loss(v, turn_data[1], pi, turn_data[0].p)
+        print('loss:', loss)
+        loss.backward(retain_graph=True)
+
+        self.optimizer.step()
 
 if __name__ == "__main__":
     teacher = Teacher(agent.MagnusDLuffy(), random_agent.Random(), config.GAMES_PER_EPOCH)

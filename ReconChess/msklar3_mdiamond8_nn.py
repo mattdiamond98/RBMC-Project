@@ -130,9 +130,7 @@ class Net(nn.Module):
                 p[i] += config.LOG_EPSILON
 
         prediction_mse = torch.sum((v - v_hat)**2)
-        probability_log = torch.sum(torch.transpose(pi, -1, 0) * torch.log(p))
-        l2_norm = config.LAMBDA * torch.norm(p)
+        probability_log = torch.sum(pi * torch.log(p))
+        l2_norm = config.LAMBDA * (torch.norm(p) ** 2)
 
-        return prediction_mse + probability_log + l2_norm
-
-        
+        return prediction_mse - probability_log + l2_norm

@@ -311,7 +311,7 @@ class Game:
 
         no_time_left = self.seconds_left_by_color[chess.WHITE] <= 0 or self.seconds_left_by_color[chess.BLACK] <= 0
         king_captured = self.truth_board.king(chess.WHITE) is None or self.truth_board.king(chess.BLACK) is None
-        too_many_turns = self.full_turn_count == 100
+        too_many_turns = self.full_turn_count == 50
         return no_time_left or king_captured or too_many_turns
         
     def get_winner(self):
@@ -333,6 +333,6 @@ class Game:
         elif self.truth_board.king(chess.BLACK) is None:
             return chess.WHITE, "WHITE won by king capture."
 
-        if self.full_turn_count == 100:
+        if self.full_turn_count == 50:
             return chess.BLACK, "BLACK won by draw REMOVE THIS"
         

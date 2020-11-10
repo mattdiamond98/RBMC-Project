@@ -30,6 +30,14 @@ from player import Player
 MOVE_OPTIONS = 64 * 64
 IN_CHANNELS = 2
 
+'''
+Theoretical Opening Theory: Theory of the Opening 
+
+Summary: Strong approaches to consistently defeat the dreaded knight rush (dun dun dun)
+'''
+# g2f3 only occurs if knight captured there before
+WHITE_OPENING = ['g1f3', 'g2g3', 'f1g2', 'g2f3', 'e1g1']
+
 class MagnusDLuffy(Player):
 
     def __init__(self):
@@ -40,6 +48,7 @@ class MagnusDLuffy(Player):
             self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
         self.mcts = None
         self.game_history = memory.GameMemory()
+        self.opening_turn = 0
         
     def handle_game_start(self, color, board):
         """
@@ -51,6 +60,7 @@ class MagnusDLuffy(Player):
         """
         self.color = color
         self.state = ParticleFilter(board, color)
+        self.legal_move_made = False    # train network to make legal moves
      
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
@@ -73,6 +83,10 @@ class MagnusDLuffy(Player):
         :example: choice = chess.A1
         """
         # TODO: update this method
+
+        if self.opening_turn == 3:  # check if knight will capture king in white opening after castling
+            return chess.Square(chess.E4)
+
         return random.choice(possible_sense)
         
     def handle_sense_result(self, sense_result):
@@ -89,6 +103,12 @@ class MagnusDLuffy(Player):
             (A6, None), (B6, None), (C8, None)
         ]
         """
+        if self.color == chess.WHITE:   # on turn 3 of white turn handle knight rush capture
+            if self.opening_turn == 3:
+                for square in sense_result:
+                    if square[0] == chess.F3 and square[1] != chess.Piece(chess.KNIGHT, chess.BLACK):
+                        self.opening_turn += 1
+
         self.state.update_sense_result(sense_result)
 
     def choose_move(self, possible_moves, seconds_left):
@@ -104,8 +124,16 @@ class MagnusDLuffy(Player):
         :condition: If you intend to move a pawn for promotion other than Queen, please specify the promotion parameter
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
+        # print(possible_moves)
+        # # NOTE: for training, we randomly sample but for tournament we should select the most likely always
+        # opening_move = self.opening()
 
-        # NOTE: for training, we randomly sample but for tournament we should select the most likely always
+        # if opening_move != None:
+        #     self.opening_turn += 1
+        #     print(opening_move, type(opening_move))
+        #     print(opening_move in possible_moves)
+        #     return opening_move
+
         sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
         state = gen_state(sample, self.state.color)
         action = self.pick_action(state)
@@ -116,6 +144,11 @@ class MagnusDLuffy(Player):
         ))
 
         choice = action_map(action[0])
+        if choice in possible_moves:
+            self.legal_move_made = True
+            print('loss a LEGAL MOVE WAS MADE OETUHEOTUOEDUOEHUNTOEUH')
+        
+        # print('loss chice', choice)
         return choice
         
     def handle_move_result(self, requested_move, taken_move, reason, captured_piece, captured_square):
@@ -138,12 +171,14 @@ class MagnusDLuffy(Player):
         :param winner_color: Chess.BLACK/chess.WHITE -- the winning color
         :param win_reason: String -- the reason for the game ending
         """
-        self.game_history.v = torch.tensor([int(self.color == winner_color)], dtype=torch.float32)
-
+        # v = [1] if self.color == winner_color else [-1]
+        v = [1] if self.legal_move_made else [-1]   # train to make legal move
+        self.game_history.v = torch.tensor(v, dtype=torch.float32)
+        print('loss game', v)
         torch.save(self.network, 'network.torch')
 
         print("I'm gonna be king of the chess players!")
-
+        print('network grad', self.network.policy_linear.weight.grad)
         return self.game_history
 
     '''
@@ -236,3 +271,10 @@ class MagnusDLuffy(Player):
 
         return pi, values
 
+    def opening(self):
+        if self.color == chess.WHITE:
+            if self.opening_turn > 4:
+                return None
+            
+            return chess.Move.from_uci(WHITE_OPENING[self.opening_turn])
+        # TODO: Implement black opening
