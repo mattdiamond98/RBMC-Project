@@ -33,7 +33,12 @@ IN_CHANNELS = 2
 class MagnusDLuffy(Player):
 
     def __init__(self):
-        self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
+        # self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
+        try:
+            self.network = torch.load('network.torch')
+        except:
+            print('failed to find network.torch')
+            self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
         self.mcts = None
         self.game_history = memory.GameMemory()
         
@@ -110,7 +115,7 @@ class MagnusDLuffy(Player):
             state,
             action[1],
             action[2],
-            action[3]
+            torch.tensor(action[3])
         ))
 
         choice = action_map(action[0])
@@ -136,7 +141,7 @@ class MagnusDLuffy(Player):
         :param winner_color: Chess.BLACK/chess.WHITE -- the winning color
         :param win_reason: String -- the reason for the game ending
         """
-        self.game_history.v = int(self.color == winner_color)
+        self.game_history.v = torch.tensor([int(self.color == winner_color)], dtype=torch.float32)
 
         torch.save(self.network, 'network.torch')
 

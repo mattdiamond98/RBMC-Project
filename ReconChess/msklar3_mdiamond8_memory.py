@@ -30,7 +30,6 @@ class TurnMemory:
 
     state := state of the game
     v_t := prediction outcome of the game at timestep t
-    pi := probability distribution from NN for a state s at time step t
     p := probability distribution from MCTS of taking actions at time step t
     '''
     def __init__(self, state, v_t, pi, p):
