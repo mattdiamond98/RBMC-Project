@@ -15,9 +15,9 @@ class Net(nn.Module):
         self.PolicyNet(policy_size)
         self.ValueNet()
 
-    def forward(self, x):
+    def forward(self, x, legal_moves):
         # x = self.ResidualForward(x)
-        policy = self.PolicyForward(x)
+        policy = self.PolicyForward(x, legal_moves)
         value = self.ValueForward(x)
 
         return policy, value
@@ -60,7 +60,7 @@ class Net(nn.Module):
         self.policy_batchnorm = nn.BatchNorm2d(2)
 
         # Fully connected linear layer
-        self.policy_linear = nn.Linear(128, policy_size, False)
+        self.policy_linear = nn.Linear(192, policy_size, False)
 
         # Softmax
         self.policy_softmax = nn.Softmax(0)
@@ -78,7 +78,7 @@ class Net(nn.Module):
         self.value_batchnorm = nn.BatchNorm2d(1)
 
         # Linear Hidden layer
-        self.value_linear1 = nn.Linear(64, 1, False)
+        self.value_linear1 = nn.Linear(96, 1, False)
 
         # Linear output value layer
         self.value_linear2 = nn.Linear(1, 1, False)
@@ -100,13 +100,14 @@ class Net(nn.Module):
 
         return x
 
-    def PolicyForward(self, x):
+    def PolicyForward(self, x, legal_moves):
         # Convolutional layer
         x = self.policy_conv(x.float())
         x = F.leaky_relu(self.policy_batchnorm(x))
 
         # Linear layer
         x = self.policy_linear(x.flatten())
+        x = x * legal_moves    # Filter out illegal moves
         x = self.policy_softmax(x)
 
         return x

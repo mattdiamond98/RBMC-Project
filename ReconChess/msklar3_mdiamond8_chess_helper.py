@@ -102,27 +102,47 @@ def fen_to_board(board):
             x += 1
     return board
 
-def board_to_fen(board_state):
-    fen = ""
+def board_to_fen(board_state, color):
+  fen = ""
 
-    board = board_state[0]
-    color = board_state[1][0][0]
+  board = board_state[0][0]
 
-    for r in board:
-        empty_count = 0
+  for r in board:
+    empty_count = 0
 
-        for f in board:
-            if f == 0:
-                empty_count += 1
-            else:
-                if empty_count != 0:
-                    fen += str(empty_count)
-                    fen += board_map[f]
+    for f in r:
+      if f == 0:
+        empty_count += 1
+      else:
+        if empty_count != 0:
+          fen += str(empty_count)
+          empty_count = 0
         
-        fen += '/'
-        fen += '{} - - 0 1'.format('w' if color == 0 else 'b')
+        fen += board_map[int(f.detach().numpy())]
 
-        return fen
+    if empty_count != 0:
+      fen += str(empty_count)
+      empty_count = 0
+      
+    fen += '/'
+
+  fen = fen[0:-1]
+  fen += ' {} - - 0 1'.format('w' if color == chess.WHITE else 'b')
+  print(fen)
+  return fen
+
+'''
+Create 1 hot array of all possible moves
+'''
+def possible_moves_to_action_map(possible_moves):
+  possible_moves_uci = np.zeros(64*64, dtype=int)
+
+  for move in possible_moves:
+    action_index = move_to_action(move)
+
+    possible_moves_uci[action_index] = 1
+  return possible_moves_uci
+
    
 def mirror_square(sq):
   return int(7 - (sq % 8) + 8 * (7 - int(sq/8)))
@@ -143,7 +163,6 @@ def action_map(action_id):
 def move_to_action(move):
   return move.from_square * 64 + move.to_square
   
-  # TODO: This crashed because of the << (maybe a | b == 0?)
 def between(a, b):
   try:
     bb = chess.BB_RAYS[a][b] & ((chess.BB_ALL << a) ^ (chess.BB_ALL << b))

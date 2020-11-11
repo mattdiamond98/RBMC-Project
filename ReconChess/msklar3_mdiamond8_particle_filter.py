@@ -27,7 +27,7 @@ class ParticleFilter():
         f = lambda move: move.to_square == captured_square
         possible_moves = list(filter(f, possible_moves))
       
-      state, possible_board_moves = gen_state(board, not self.color, possible_moves)
+      state, possible_board_moves = gen_state(board, not self.color)
       policy = network.PolicyForward(state, possible_board_moves).detach().numpy()
       
       possible_move_weights = np.ndarray(len(possible_moves))

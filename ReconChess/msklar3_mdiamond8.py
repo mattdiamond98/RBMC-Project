@@ -18,6 +18,7 @@ import chess
 import numpy as np
 import torch
 
+import msklar3_mdiamond8_chess_helper as helper
 import msklar3_mdiamond8_config as config
 import msklar3_mdiamond8_mcts as mcts
 import msklar3_mdiamond8_memory as memory
@@ -33,6 +34,7 @@ IN_CHANNELS = 8
 '''
 Theoretical Opening Theory: Theory of the Opening 
 
+Hungarian Opening: Rifle Bishop Variation
 Summary: Strong approaches to consistently defeat the dreaded knight rush (dun dun dun)
 '''
 # g2f3 only occurs if knight captured there before
@@ -124,7 +126,6 @@ class MagnusDLuffy(Player):
         :condition: If you intend to move a pawn for promotion other than Queen, please specify the promotion parameter
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
-        # print(possible_moves)
         # # NOTE: for training, we randomly sample but for tournament we should select the most likely always
         # opening_move = self.opening()
 
@@ -133,10 +134,11 @@ class MagnusDLuffy(Player):
         #     print(opening_move, type(opening_move))
         #     print(opening_move in possible_moves)
         #     return opening_move
-
         sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
+
         state, moves = gen_state(sample, self.state.color)
-        action = self.pick_action(state)
+
+        action = self.pick_action(state, moves)
 
         self.game_history.add_turn(memory.TurnMemory(
             state,
@@ -190,9 +192,9 @@ class MagnusDLuffy(Player):
         2 -> the probability distribution from the neural network
         3 -> the probability distribution from the MCTS
     '''
-    def pick_action(self, state):
+    def pick_action(self, state, possible_moves):
         # Get value of the state from the neural network and probability distsribution from the neural network
-        nn_policy, nn_value = self.network.forward(state)
+        nn_policy, nn_value = self.network.forward(state, possible_moves)
 
         # Create MCT
         root = mcts.Node(state)
@@ -243,7 +245,6 @@ class MagnusDLuffy(Player):
         if tau == 0:    # Deterministic
             action = random.choice(np.anywhere(pi == max(pi)))
         else:           # Stochastically
-            print('sum: ', sum(pi))
             action_id = np.random.multinomial(1, pi)
             action = np.where(action_id == 1)[0][0]
 
