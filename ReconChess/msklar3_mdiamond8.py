@@ -28,7 +28,7 @@ from msklar3_mdiamond8_particle_filter import ParticleFilter
 from player import Player
 
 MOVE_OPTIONS = 64 * 64
-IN_CHANNELS = 2
+IN_CHANNELS = 8
 
 '''
 Theoretical Opening Theory: Theory of the Opening 
