@@ -141,7 +141,7 @@ class MagnusDLuffy(Player):
         action = self.pick_action(state, moves)
 
         self.game_history.add_turn(memory.TurnMemory(
-            state,
+            (state, moves), # state and pseudo-legal moves
             torch.tensor(action[3])
         ))
 
