@@ -197,7 +197,7 @@ class MagnusDLuffy(Player):
         nn_policy, nn_value = self.network.forward(state, possible_moves)
 
         # Create MCT
-        root = mcts.Node((state, possible_moves, self.state.color))
+        root = mcts.Node((state, possible_moves), self.state.color)
         self.mcts = mcts.MCTS(root, self.state.color)
 
         # Train the MCT
@@ -223,7 +223,7 @@ class MagnusDLuffy(Player):
         for action_id in best_policies:
             self.mcts.leaf.edges.append(mcts.Edge(
                 self.mcts.leaf,
-                mcts.Node((state, possible_moves, not self.mcts.leaf.color)),
+                mcts.Node((state, possible_moves), not self.mcts.leaf.color),
                 action_id,
                 pi[action_id]))
 
