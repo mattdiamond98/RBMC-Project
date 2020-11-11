@@ -119,7 +119,7 @@ def board_to_fen(board_state, color):
 
   fen = fen[0:-1]
   fen += ' {} - - 0 1'.format('w' if color == chess.WHITE else 'b')
-
+  print(fen)
   return fen
 
 '''

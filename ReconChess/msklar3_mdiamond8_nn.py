@@ -60,7 +60,7 @@ class Net(nn.Module):
         self.policy_batchnorm = nn.BatchNorm2d(2)
 
         # Fully connected linear layer
-        self.policy_linear = nn.Linear(128, policy_size, False)
+        self.policy_linear = nn.Linear(192, policy_size, False)
 
         # Softmax
         self.policy_softmax = nn.Softmax(0)
@@ -78,7 +78,7 @@ class Net(nn.Module):
         self.value_batchnorm = nn.BatchNorm2d(1)
 
         # Linear Hidden layer
-        self.value_linear1 = nn.Linear(64, 1, False)
+        self.value_linear1 = nn.Linear(96, 1, False)
 
         # Linear output value layer
         self.value_linear2 = nn.Linear(1, 1, False)

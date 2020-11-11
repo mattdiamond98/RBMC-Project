@@ -137,10 +137,8 @@ class MagnusDLuffy(Player):
         sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
         state = gen_state(sample, self.state.color)
         action = self.pick_action(state)
-        
-        fen = helper.board_to_fen(state, self.color)
-        board = chess.Board(fen)
-        legal_moves = list(board.legal_moves)
+
+        legal_moves = list(sample.legal_moves)
         possible_moves_uci = helper.possible_moves_to_uci(legal_moves)
 
         self.game_history.add_turn(memory.TurnMemory(
