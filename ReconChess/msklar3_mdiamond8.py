@@ -171,8 +171,8 @@ class MagnusDLuffy(Player):
         :param winner_color: Chess.BLACK/chess.WHITE -- the winning color
         :param win_reason: String -- the reason for the game ending
         """
-        # v = [1] if self.color == winner_color else [-1]
-        v = [1] if self.legal_move_made else [-1]   # train to make legal move
+        v = [1] if self.color == winner_color else [-1]
+        # v = [1] if self.legal_move_made else [-1]   # train to make legal move
         self.game_history.v = torch.tensor(v, dtype=torch.float32)
         print('loss game', v)
         torch.save(self.network, 'network.torch')
