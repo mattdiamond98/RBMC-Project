@@ -58,19 +58,28 @@ def empty_path_squares(move):
   empty_squares.add(move.from_square)
   return list(empty_squares)
 
-# Generate the representation of the state for a neural network
 def gen_state(board, color):
-    if not color:
-      board = board.mirror() # always pretend we are white for speeding up training
-    
-    state = np.zeros((8,8,2,6))
-    for (x,y), piece in np.ndenumerate(fen_to_board(board)):
-      if piece > 0:
-        state[x, y, int(piece > 6), int((piece-1) % 6)] = 1
-    
-    nn_state = torch.tensor(state)
-    
-    return nn_state
+  """
+  Generate the representation of the state for a neural network
+  
+  :param board: chess.Board -- the board representation
+  :param color: chess.Color (boolean) -- the current turn perspective
+
+  :return: (nn_state, possible_moves) - the network compatible state and the possible moves
+  
+  NOTE: this flips the board if the turn is black, this means that moves and distribution output are also FLIPPED
+  """
+  if not color:
+    board = board.mirror() # always pretend to be on white for training time, flip the board if current move is black
+  board.turn = chess.WHITE
+  state = np.zeros((8,8,2,6))
+  for (x,y), piece in np.ndenumerate(fen_to_board(board)):
+    if piece > 0:
+      state[x, y, int(piece > 6), int((piece-1) % 6)] = 1
+  
+  nn_state = torch.tensor(state)
+  possible_moves = list(board.generate_pseudo_legal_moves())
+  return (nn_state, possible_moves)
 
 def fen_to_board(board):
     fen = board.fen()
@@ -114,6 +123,12 @@ def board_to_fen(board_state):
         fen += '{} - - 0 1'.format('w' if color == 0 else 'b')
 
         return fen
+   
+def mirror_square(sq):
+  return int(7 - (sq % 8) + 8 * (7 - int(sq/8)))
+   
+def reverse_move(move): # reverse a chess.Move
+  return chess.Move(mirror_square(move.from_square), mirror_square(move.to_square))
 
 ''' 
 Map an action (index in the policy) to the actual move encoded as a tuple of 

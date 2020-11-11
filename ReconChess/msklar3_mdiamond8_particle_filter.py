@@ -1,4 +1,4 @@
-from msklar3_mdiamond8_chess_helper import piece_equal, empty_path_squares, gen_state, move_to_action
+from msklar3_mdiamond8_chess_helper import piece_equal, empty_path_squares, gen_state, move_to_action, reverse_move
 import random
 import numpy as np
 from sklearn.preprocessing import normalize
@@ -27,8 +27,8 @@ class ParticleFilter():
         f = lambda move: move.to_square == captured_square
         possible_moves = list(filter(f, possible_moves))
       
-      state = gen_state(board, not self.color)
-      policy = network.PolicyForward(state).detach().numpy()
+      state, possible_board_moves = gen_state(board, not self.color, possible_moves)
+      policy = network.PolicyForward(state, possible_board_moves).detach().numpy()
       
       possible_move_weights = np.ndarray(len(possible_moves))
       for i,move in enumerate(possible_moves):
@@ -39,7 +39,7 @@ class ParticleFilter():
       else:
         move = np.random.choice(possible_moves, p=possible_move_weights / np.sum(possible_move_weights))
         weight *= policy[move_to_action(move)]
-        board.push(move)
+        board.push(reverse_move(move))
       self.particles[i] = (board, weight)
     
       

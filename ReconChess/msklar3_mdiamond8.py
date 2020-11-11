@@ -135,7 +135,7 @@ class MagnusDLuffy(Player):
         #     return opening_move
 
         sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
-        state = gen_state(sample, self.state.color)
+        state, moves = gen_state(sample, self.state.color)
         action = self.pick_action(state)
 
         self.game_history.add_turn(memory.TurnMemory(
