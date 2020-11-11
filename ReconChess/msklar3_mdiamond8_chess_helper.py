@@ -78,7 +78,7 @@ def gen_state(board, color):
       state[x, y, int(piece > 6), int((piece-1) % 6)] = 1
   
   nn_state = torch.tensor(state)
-  possible_moves = list(board.generate_pseudo_legal_moves())
+  possible_moves = possible_moves_to_action_map(list(board.generate_pseudo_legal_moves()))
   return (nn_state, possible_moves)
 
 def fen_to_board(board):
