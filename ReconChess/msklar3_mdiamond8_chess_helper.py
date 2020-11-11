@@ -60,10 +60,15 @@ def empty_path_squares(move):
 
 # Generate the representation of the state for a neural network
 def gen_state(board, color):
-    board_array = fen_to_board(board)
-    player_layer = np.full((8,8), color)
+    if not color:
+      board = board.mirror() # always pretend we are white for speeding up training
     
-    nn_state = torch.tensor([[board_array, player_layer]])
+    state = np.zeros((8,8,2,6))
+    for (x,y), piece in np.ndenumerate(fen_to_board(board)):
+      if piece > 0:
+        state[x, y, int(piece > 6), int((piece-1) % 6)] = 1
+    
+    nn_state = torch.tensor(state)
     
     return nn_state
 
