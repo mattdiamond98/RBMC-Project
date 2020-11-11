@@ -107,7 +107,7 @@ class Net(nn.Module):
 
         # Linear layer
         x = self.policy_linear(x.flatten())
-        x = x * torch.tensor(legal_moves)    # Filter out illegal moves
+        # x = x * torch.tensor(legal_moves)    # Filter out illegal moves
         x = self.policy_softmax(x)
 
         return x

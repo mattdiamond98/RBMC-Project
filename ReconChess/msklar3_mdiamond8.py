@@ -197,19 +197,19 @@ class MagnusDLuffy(Player):
         nn_policy, nn_value = self.network.forward(state, possible_moves)
 
         # Create MCT
-        root = mcts.Node(state)
+        root = mcts.Node((state, possible_moves, self.state.color))
         self.mcts = mcts.MCTS(root, self.state.color)
 
         # Train the MCT
         for _ in range(config.MCTS_SIMULATIONS):
-            self.simulate(state)
+            self.simulate(state, possible_moves)
 
         # Choose the optimal action given the MCT
         action, pi = self.select_move(config.TAU)
 
         return action, nn_value, nn_policy, pi
 
-    def simulate(self, state):
+    def simulate(self, state, possible_moves):
         # Selection
         leaf, path = self.mcts.select()
 
@@ -223,7 +223,7 @@ class MagnusDLuffy(Player):
         for action_id in best_policies:
             self.mcts.leaf.edges.append(mcts.Edge(
                 self.mcts.leaf,
-                mcts.Node(state),
+                mcts.Node((state, possible_moves, not self.mcts.leaf.color)),
                 action_id,
                 pi[action_id]))
 
@@ -231,7 +231,7 @@ class MagnusDLuffy(Player):
         self.mcts.backfill(v, path)
 
     def evaluate_leaf(self, leaf):
-        pi, v = self.network.forward(leaf.state)
+        pi, v = self.network.forward(leaf.state[0], leaf.state[1])
 
         return pi, v
 

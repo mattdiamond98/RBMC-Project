@@ -1,16 +1,14 @@
 import msklar3_mdiamond8_config as config
 
 class Node():
-    def __init__(self, state):
+    def __init__(self, state, color):
         self.state = state
+        self.color = color
 
         self.edges = []
 
     def is_leaf(self):
         return len(self.edges) == 0
-
-    def color(self):
-        return self.state[1][0][0]
 
     def to_string(self):
         print("node has state", self.state)
