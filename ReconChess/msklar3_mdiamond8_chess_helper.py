@@ -125,7 +125,7 @@ def board_to_fen(board_state, color):
 '''
 Create 1 hot array of all possible moves
 '''
-def possible_moves_to_uci(possible_moves):
+def possible_moves_to_action_map(possible_moves):
   possible_moves_uci = np.zeros(64*64, dtype=int)
 
   for move in possible_moves:
