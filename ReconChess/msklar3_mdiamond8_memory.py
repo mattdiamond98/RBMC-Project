@@ -32,7 +32,7 @@ class TurnMemory:
     p := probability distribution from MCTS of taking actions at time step t
     '''
     def __init__(self, state, p):
-        self.state = state
+        self.state = state  # state and pseudo-legal moves
         self.p = p
 
     def to_string(self):

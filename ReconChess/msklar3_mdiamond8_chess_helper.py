@@ -161,7 +161,7 @@ def action_map(action_id):
   return chess.Move(from_square_id, to_square_id)
 
 def move_to_action(move):
-  return move.from_square * 64 + move.to_square
+  return move.from_square + move.to_square * 64
   
 def between(a, b):
   try:

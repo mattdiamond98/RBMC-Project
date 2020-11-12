@@ -82,7 +82,7 @@ class Teacher():
         for turn in training_turns:
             turn_data = turn_list[turn]
 
-            pi, v = self.network.forward(turn_data[0].state)
+            pi, v = self.network.forward(turn_data[0].state[0], turn_data[0].state[1])
 
             pi_list.append(pi)
             v_list.append(v)

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import msklar3_mdiamond8_chess_helper as helper
 import msklar3_mdiamond8_config as config
 
 
@@ -107,8 +107,9 @@ class Net(nn.Module):
 
         # Linear layer
         x = self.policy_linear(x.flatten())
-        # x = x * torch.tensor(legal_moves)    # Filter out illegal moves
         x = self.policy_softmax(x)
+        x = x * torch.tensor(legal_moves)    # Filter out illegal moves
+        # x = torch.norm(x)
 
         return x
 
