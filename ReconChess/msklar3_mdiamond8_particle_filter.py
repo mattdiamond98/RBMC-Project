@@ -39,7 +39,7 @@ class ParticleFilter():
       else:
         move = np.random.choice(possible_moves, p=possible_move_weights / np.sum(possible_move_weights))
         weight *= policy[move_to_action(move)]
-        board.push(reverse_move(move)
+        board.push(reverse_move(move))
       self.particles[i] = (board, weight)
     
       
