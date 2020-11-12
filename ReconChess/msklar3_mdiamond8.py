@@ -137,7 +137,6 @@ class MagnusDLuffy(Player):
         sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
 
         state, moves = gen_state(sample, self.state.color)
-
         action = self.pick_action(state, moves)
 
         self.game_history.add_turn(memory.TurnMemory(
@@ -150,7 +149,6 @@ class MagnusDLuffy(Player):
             self.legal_move_made = True
             print('loss a LEGAL MOVE WAS MADE OETUHEOTUOEDUOEHUNTOEUH')
         
-        # print('loss chice', choice)
         return choice
         
     def handle_move_result(self, requested_move, taken_move, reason, captured_piece, captured_square):
@@ -217,8 +215,7 @@ class MagnusDLuffy(Player):
         pi, v = self.evaluate_leaf(leaf)
 
         # Expansion
-        best_policies = np.argpartition(
-            pi.detach().numpy(), config.SIMULATION_EXPANSION)[-config.SIMULATION_EXPANSION:]
+        best_policies = torch.topk(pi, config.SIMULATION_EXPANSION)[1]
 
         for action_id in best_policies:
             self.mcts.leaf.edges.append(mcts.Edge(
