@@ -46,7 +46,7 @@ def empty_path_squares(move):
   :param move: chess.Move -- the move taken, or None
   :return: list(chess.Square) -- the known empty squares based on this move
   """
-  if move is None:
+  if move is None or move.from_square is None or move.to_square is None:
     return []
   if chess.square_distance(move.from_square, move.to_square) <= 1:
     return []
