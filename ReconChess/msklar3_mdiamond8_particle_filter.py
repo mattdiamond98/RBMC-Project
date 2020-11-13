@@ -99,8 +99,10 @@ class ParticleFilter():
         if board.piece_at(square) is not None:
           board.set_piece_at(square, None)
           new_weight = 0.0001 * weight
+          
+      board.set_piece_at(taken_move.to_square, board.piece_at(taken_move.from_square))
+      board.set_piece_at(taken_move.from_square, None)
       
-      board.push(taken_move)
       self.particles[i] = (board, new_weight)
     self.update_particles_by_weight()
     self.normalize_particles()
