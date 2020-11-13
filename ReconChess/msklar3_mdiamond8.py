@@ -50,7 +50,6 @@ class MagnusDLuffy(Player):
             self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
         self.mcts = None
         self.game_history = memory.GameMemory()
-        self.opening_turn = 0
         
     def handle_game_start(self, color, board):
         """
@@ -63,6 +62,7 @@ class MagnusDLuffy(Player):
         self.color = color
         self.state = ParticleFilter(board, color)
         self.legal_move_made = False    # train network to make legal moves
+        self.opening_turn = 0
      
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
@@ -127,13 +127,13 @@ class MagnusDLuffy(Player):
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
         # # NOTE: for training, we randomly sample but for tournament we should select the most likely always
-        # opening_move = self.opening()
+        opening_move = self.opening()
 
-        # if opening_move != None:
-        #     self.opening_turn += 1
-        #     print(opening_move, type(opening_move))
-        #     print(opening_move in possible_moves)
-        #     return opening_move
+        if opening_move != None:
+            self.opening_turn += 1
+            print(opening_move, type(opening_move))
+            print(opening_move in possible_moves)
+            return opening_move
         sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
 
         state, moves = gen_state(sample, self.state.color)
@@ -147,7 +147,6 @@ class MagnusDLuffy(Player):
         choice = action_map(action[0])
         if choice in possible_moves:
             self.legal_move_made = True
-            print('loss a LEGAL MOVE WAS MADE OETUHEOTUOEDUOEHUNTOEUH')
         
         return choice
         
