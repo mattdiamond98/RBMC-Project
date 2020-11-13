@@ -54,7 +54,10 @@ def empty_path_squares(move):
   y = chess.square_file(move.to_square) - chess.square_file(move.from_square)
   if x != 0 and y != 0 and abs(x) != abs(y): # knight move check
     return []
-  empty_squares = chess.SquareSet(between(move.from_square, move.to_square))
+  squares = between(int(move.from_square), int(move.to_square))
+  if squares is None:
+    return []
+  empty_squares = chess.SquareSet(squares)
   empty_squares.add(move.from_square)
   return list(empty_squares)
 
@@ -169,3 +172,4 @@ def between(a, b):
     return bb & (bb - 1)
   except:
     print("DEBUG between(a,b) (type(a), type(b), a, b)", type(a), type(b), a, b)
+    return []
