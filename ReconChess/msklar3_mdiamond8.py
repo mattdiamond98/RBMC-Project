@@ -34,11 +34,19 @@ IN_CHANNELS = 8
 '''
 Theoretical Opening Theory: Theory of the Opening 
 
-Hungarian Opening: Rifle Bishop Variation
+Hungarian Opening: Anti-Knight Variation
 Summary: Strong approaches to consistently defeat the dreaded knight rush (dun dun dun)
 '''
 # g2f3 only occurs if knight captured there before
 WHITE_OPENING = ['g1f3', 'g2g3', 'f1g2', 'g2f3', 'e1g1']
+
+'''
+Theoretical Opening Theory: Theory of the Opening
+
+Bon'Cloud Opening: Anti-Knight Variation
+Summary: Strong approaches to consistently defeat the dreaded knight rush (dun dun dun)
+'''
+BLACK_OPENING = ['d7d6', 'e8d7', 'g8f6']
 
 class MagnusDLuffy(Player):
 
@@ -84,10 +92,9 @@ class MagnusDLuffy(Player):
         :return: chess.SQUARE -- the center of 3x3 section of the board you want to sense
         :example: choice = chess.A1
         """
-        # TODO: update this method
-
-        if self.opening_turn == 3:  # check if knight will capture king in white opening after castling
-            return chess.Square(chess.E4)
+        if self.color == chess.WHITE:
+            if self.opening_turn == 3:  # check if knight will capture king in white opening after castling
+                return chess.Square(chess.E4)
 
         return random.choice(possible_sense)
         
@@ -106,8 +113,8 @@ class MagnusDLuffy(Player):
         ]
         """
         if self.color == chess.WHITE:   # on turn 3 of white turn handle knight rush capture
-            if self.opening_turn == 3:
-                for square in sense_result:
+            for square in sense_result:
+                if self.opening_turn == 3:
                     if square[0] == chess.F3 and square[1] != chess.Piece(chess.KNIGHT, chess.BLACK):
                         self.opening_turn += 1
 
@@ -131,9 +138,8 @@ class MagnusDLuffy(Player):
 
         if opening_move != None:
             self.opening_turn += 1
-            print(opening_move, type(opening_move))
-            print(opening_move in possible_moves)
             return opening_move
+
         sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
 
         state, moves = gen_state(sample, self.state.color)
@@ -272,6 +278,13 @@ class MagnusDLuffy(Player):
         if self.color == chess.WHITE:
             if self.opening_turn > 4:
                 return None
-            
+
             return chess.Move.from_uci(WHITE_OPENING[self.opening_turn])
-        # TODO: Implement black opening
+
+        if self.color == chess.BLACK:
+            if self.opening_turn > 3:
+                return None
+
+            return chess.Move.from_uci(BLACK_OPENING[self.opening_turn])
+
+        return None
