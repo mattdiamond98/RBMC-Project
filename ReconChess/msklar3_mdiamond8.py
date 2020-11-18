@@ -17,6 +17,7 @@ from datetime import datetime
 import chess
 import numpy as np
 import torch
+from stockfish import Stockfish
 
 import msklar3_mdiamond8_chess_helper as helper
 import msklar3_mdiamond8_config as config
@@ -58,6 +59,12 @@ class MagnusDLuffy(Player):
             self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
         self.mcts = None
         self.game_history = memory.GameMemory()
+
+        self.stockfish = Stockfish(path.abspath('msklar3_mdiamond8_stockfish'))
+        self.stockfish.param['Slow Mover'] = 10
+        self.stockfish.param['Move Overhead'] = 10
+        self.stockfish.param['Minimum Thinking Time'] = 10
+        self.stockfish.depth = 2
         
     def handle_game_start(self, color, board):
         """
@@ -187,7 +194,12 @@ class MagnusDLuffy(Player):
         choice = action_map(action[0])
         if choice in possible_moves:
             self.legal_move_made = True
-        
+
+        self.stockfish.set_fen_position(sample.fen())
+        best_move = self.stockfish.get_best_move()
+        print('type: ', type(best_move))
+        print(helper.action_map(best_move))
+
         return choice
         
     def handle_move_result(self, requested_move, taken_move, reason, captured_piece, captured_square):
