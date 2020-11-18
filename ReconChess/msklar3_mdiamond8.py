@@ -184,7 +184,15 @@ class MagnusDLuffy(Player):
         sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
 
         state, moves = gen_state(sample, self.state.color)
-        action = self.pick_action(state, moves)
+
+        self.stockfish.set_fen_position(sample.fen())
+        print('before best move')
+        best_move = self.stockfish.get_best_move()
+        print('best move is ', best_move)
+        print('type: ', chess.Move.from_uci(best_move))
+        stockfish_actions = helper.best_move_to_action_map(best_move)
+
+        action = self.pick_action(state, moves, stockfish_actions)
 
         self.game_history.add_turn(memory.TurnMemory(
             (state, moves), # state and pseudo-legal moves
@@ -194,11 +202,6 @@ class MagnusDLuffy(Player):
         choice = action_map(action[0])
         if choice in possible_moves:
             self.legal_move_made = True
-
-        self.stockfish.set_fen_position(sample.fen())
-        best_move = self.stockfish.get_best_move()
-        print('type: ', type(best_move))
-        print(helper.action_map(best_move))
 
         return choice
         
@@ -241,7 +244,7 @@ class MagnusDLuffy(Player):
         2 -> the probability distribution from the neural network
         3 -> the probability distribution from the MCTS
     '''
-    def pick_action(self, state, possible_moves):
+    def pick_action(self, state, possible_moves, stockfish_actions):
         # Get value of the state from the neural network and probability distsribution from the neural network
         nn_policy, nn_value = self.network.forward(state, possible_moves)
 
@@ -254,7 +257,7 @@ class MagnusDLuffy(Player):
             self.simulate(state, possible_moves)
 
         # Choose the optimal action given the MCT
-        action, pi = self.select_move(config.TAU)
+        action, pi = self.select_move(config.TAU, stockfish_actions)
 
         return action, nn_value, nn_policy, pi
 
@@ -287,8 +290,9 @@ class MagnusDLuffy(Player):
     Select a move to use and return the action to make the move and probability
     distribution of the policies.
     '''
-    def select_move(self, tau):
+    def select_move(self, tau, stockfish_actions):
         pi, values = self.policy(tau)
+        pi = config.NN_DECISION_WEIGHT * pi + (1 - config.NN_DECISION_WEIGHT) * stockfish_actions
 
         if tau == 0:    # Deterministic
             action = random.choice(np.anywhere(pi == max(pi)))
