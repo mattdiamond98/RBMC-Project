@@ -109,8 +109,7 @@ class Net(nn.Module):
         x = self.policy_linear(x.flatten())
         x = self.policy_softmax(x)
         x = x * torch.tensor(legal_moves)    # Filter out illegal moves
-        # x = torch.norm(x)
-        # var = x.mean((x-mean)**2, -1, keepdim = True)
+
         return x
 
     def ValueForward(self, x):

@@ -120,8 +120,8 @@ def board_to_fen(board_state, color):
         if empty_count != 0:
           fen += str(empty_count)
           empty_count = 0
-        
-        fen += board_map[int(f.detach().numpy())]
+
+        fen += board_map[int(f)]
 
     if empty_count != 0:
       fen += str(empty_count)
@@ -173,3 +173,11 @@ def between(a, b):
   except:
     print("DEBUG between(a,b) (type(a), type(b), a, b)", type(a), type(b), a, b)
     return []
+
+def best_move_to_action_map(move):
+  action_map = np.zeros((64*64,), dtype=np.double)
+  action = move_to_action(move)
+
+  action[action] = 1
+
+  return action_map
