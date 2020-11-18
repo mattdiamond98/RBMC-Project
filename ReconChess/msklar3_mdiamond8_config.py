@@ -9,3 +9,5 @@ SIMULATION_EXPANSION = 10
 EPOCHS = 10
 GAMES_PER_EPOCH = 5 # Games played before training network
 TRAINING_TURNS_PER_EPOCH = 20
+
+moves_till_loss = 200

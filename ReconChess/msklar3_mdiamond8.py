@@ -46,7 +46,7 @@ Theoretical Opening Theory: Theory of the Opening
 Bon'Cloud Opening: Anti-Knight Variation
 Summary: Strong approaches to consistently defeat the dreaded knight rush (dun dun dun)
 '''
-BLACK_OPENING = ['d7d6', 'e8d7', 'g8f6']
+BLACK_OPENING = ['e7e6', 'e8e7', 'g8f6']
 
 class MagnusDLuffy(Player):
 

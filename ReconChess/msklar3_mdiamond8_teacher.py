@@ -22,6 +22,8 @@ class Teacher():
         self.agent = agent
         self.opponent = opponent
         self.games_per_epoch = games_per_epoch
+        self.win  = 0
+        self.loss = 0
 
         self.network = torch.load('network.torch')
         self.optimizer = optim.Adam(self.network.parameters(), lr=0.01)
@@ -36,6 +38,12 @@ class Teacher():
         self.game_history = []
         torch.save(self.network, 'network.torch')
 
+        print('loss epoch stats')
+        print('loss { wins: ', self.win, ' loss: ', self.loss, ', win_percent: ', self.win / (self.win + self.loss))
+
+        self.win = 0
+        self.loss = 0
+
         self.agent = agent.MagnusDLuffy()
 
     '''
@@ -46,8 +54,18 @@ class Teacher():
         print(results[0])
         if results[0] == True:
             WINNERS['WHITE'] += 1
+
+            if self.agent.color == chess.WHITE:
+                self.win += 1
+            else:
+                self.loss += 1
         elif results[0] == False:
             WINNERS['BLACK'] += 1
+
+            if self.agent.color == chess.WHITE:
+                self.loss += 1
+            else:
+                self.win += 1
 
         if self.agent.color == chess.WHITE:
             self.add_game(results[2])
