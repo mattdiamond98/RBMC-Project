@@ -8,8 +8,9 @@ NN_DECISION_WEIGHT = 0.3    # how much the neural network output decides the act
 
 SIMULATION_EXPANSION = 10
 
-EPOCHS = 10
+EPOCHS = 5
 GAMES_PER_EPOCH = 10 # Games played before training network
+TRAINING_TURNS_PER_EPOCH = 150
 TRAINING_TURNS_PER_EPOCH = 100
 
 moves_till_loss = 200
