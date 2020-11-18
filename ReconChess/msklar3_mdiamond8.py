@@ -96,6 +96,40 @@ class MagnusDLuffy(Player):
             if self.opening_turn == 3:  # check if knight will capture king in white opening after castling
                 return chess.Square(chess.E4)
 
+
+        sample = self.state.sample_from_particles(50)
+        
+        most_uncertain = None
+        most_uncertain_score = None
+        for square in possible_sense:
+          rank, file = chess.square_rank(square), chess.square_file(square)
+          if rank - 1 < 0 or rank + 1 > 7 or file - 1 < 0 or file + 1 > 7:
+            continue
+          distribution = [dict() for _ in range(9)] # a dict for each square, containing sum weights
+          for (board, weight) in sample:
+            for delta_rank in [-1, 0, 1]:
+              for delta_file in [-1, 0, 1]:
+                 sense_square = chess.square(file + delta_file, rank + delta_rank)
+                 piece = board.piece_at(sense_square)
+
+                 i = 3 * (delta_rank + 1) + (delta_file + 1)
+                 if piece in distribution[i]:
+                   d = distribution[i]
+                   d[piece] += weight
+                   distribution[i] = d
+                 else:
+                   d = distribution[i]
+                   d[piece] = weight
+                   distribution[i] = d
+
+          total_score = 0
+          for weights in distribution:
+            total_score += max(weights.values()) / sum(weights.values())
+          
+          if most_uncertain is None or total_score < most_uncertain_score:
+            most_uncertain = square
+            most_uncertain_score = total_score
+          
         return random.choice(possible_sense)
         
     def handle_sense_result(self, sense_result):
