@@ -190,7 +190,7 @@ class MagnusDLuffy(Player):
         best_move = self.stockfish.get_best_move()
         print('best move is ', best_move)
         print('type: ', chess.Move.from_uci(best_move))
-        stockfish_actions = helper.best_move_to_action_map(best_move)
+        stockfish_actions = helper.best_move_to_action_map(chess.Move.from_uci(best_move))
 
         action = self.pick_action(state, moves, stockfish_actions)
 

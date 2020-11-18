@@ -178,6 +178,6 @@ def best_move_to_action_map(move):
   action_map = np.zeros((64*64,), dtype=np.double)
   action = move_to_action(move)
 
-  action[action] = 1
+  action_map[action] = 1
 
   return action_map
