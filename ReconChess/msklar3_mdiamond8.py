@@ -64,7 +64,7 @@ class MagnusDLuffy(Player):
         self.stockfish.param['Slow Mover'] = 10
         self.stockfish.param['Move Overhead'] = 10
         self.stockfish.param['Minimum Thinking Time'] = 10
-        self.stockfish.depth = 2
+        self.stockfish.depth = config.STOCKFISH_DEPTH
         
     def handle_game_start(self, color, board):
         """
@@ -250,7 +250,7 @@ class MagnusDLuffy(Player):
 
         # Create MCT
         root = mcts.Node((state, possible_moves), self.state.color)
-        self.mcts = mcts.MCTS(root, self.state.color)
+        self.mcts = mcts.MCTS(root, self.state.colr)
 
         # Train the MCT
         for _ in range(config.MCTS_SIMULATIONS):
@@ -292,7 +292,7 @@ class MagnusDLuffy(Player):
     '''
     def select_move(self, tau, stockfish_actions):
         pi, values = self.policy(tau)
-        pi = config.NN_DECISION_WEIGHT * pi + (1 - config.NN_DECISION_WEIGHT) * stockfish_actions
+        pi = config.NN_DECISION_WEIGHT * pi + (1 - config.NN_DECISION_WEIGHT_ALPHA) * stockfish_actions
 
         if tau == 0:    # Deterministic
             action = random.choice(np.anywhere(pi == max(pi)))
