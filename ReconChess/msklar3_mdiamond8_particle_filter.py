@@ -72,6 +72,8 @@ class ParticleFilter():
         if not piece_equal(piece, previous_piece):
           new_weight *= 0.0001
         board.set_piece_at(square, piece)
+        if not board.is_valid():
+          new_weight *= 0.000001
       new_weight *= weight
       self.particles[i] = (board, new_weight)
     self.update_particles_by_weight()
@@ -110,7 +112,7 @@ class ParticleFilter():
     self.update_particles_by_weight()
     self.normalize_particles()
       
-  def sample_from_particles(self, K=1):
+  def sample_from_particles(self, K=1, max_iter=20):
     """
     Sample randomly from the particles based on their weights
 
@@ -118,8 +120,27 @@ class ParticleFilter():
    
     :return: list(tuple(board, int)) -- the particle returned in the form (board, weight)
     """
-    return random.choices(self.particles, weights=[weight for (board, weight) in self.particles], k=K)
+    if max_iter <= 0:
+      print("Sample repeatedly returned invalid particles")
+      print("Particles:")
+      print(self.particles)
+      return []
     
+    sample = random.choices(self.particles, weights=[weight for (board, weight) in self.particles], k=K)
+    
+    invalid = []
+    for i, particle in enumerate(sample):
+      board, weight = particle
+      if not board.is_valid():
+        invalid.append(i)
+    
+    if len(invalid) > 0:
+      repeated_sample = self.sample_from_particles(len(invalid), max_iter = max_iter - 1)
+      for i in range(len(invalid)):
+        sample[invalid[i]] = repeated_sample[i]
+    
+    return sample
+
   def update_particles_by_weight(self):
     """
     Resample each particle based on the weight
