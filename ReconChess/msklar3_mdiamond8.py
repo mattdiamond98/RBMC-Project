@@ -15,12 +15,9 @@ import time
 from datetime import datetime
 
 import chess
+import chess.engine
 import numpy as np
 import torch
-from pystockfish import *
-from stockfish import Stockfish
-
-import chess.engine
 
 import msklar3_mdiamond8_chess_helper as helper
 import msklar3_mdiamond8_config as config
@@ -64,6 +61,7 @@ class MagnusDLuffy(Player):
         self.game_history = memory.GameMemory()
 
         self.stockfish = chess.engine.SimpleEngine.popen_uci(path.abspath('msklar3_mdiamond8_stockfish'))
+        # self.stockfish = chess.engine.SimpleEngine.popen_uci('/usr/games/stockfish')
         
     def handle_game_start(self, color, board):
         """
@@ -184,7 +182,7 @@ class MagnusDLuffy(Player):
 
         state, moves = gen_state(sample, self.state.color)
 
-        best_move = self.stockfish.play(sample, chess.engine.Limit(time=10))
+        best_move = self.stockfish.play(sample, chess.engine.Limit(time=0.1))
         print('best move is ', best_move.move)
         stockfish_actions = helper.best_move_to_action_map(best_move.move)
 
