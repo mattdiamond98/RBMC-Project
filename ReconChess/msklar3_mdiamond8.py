@@ -184,7 +184,7 @@ class MagnusDLuffy(Player):
 
         state, moves = gen_state(sample, self.state.color)
 
-        best_move = self.stockfish.play(sample, chess.engine.Limit(time=1))
+        best_move = self.stockfish.play(sample, chess.engine.Limit(time=10))
         print('best move is ', best_move.move)
         stockfish_actions = helper.best_move_to_action_map(best_move.move)
 
