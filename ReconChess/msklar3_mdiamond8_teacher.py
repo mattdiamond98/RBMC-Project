@@ -7,6 +7,7 @@ import msklar3_mdiamond8 as agent
 import msklar3_mdiamond8_config as config
 import msklar3_mdiamond8_nn as nn
 import random_agent
+import msklar3_mdiamond8_knight_rush_agent as knight_rush_agents
 from msklar3_mdiamond8_memory import GameMemory, TurnMemory
 from msklar3_mdiamond8_play_game import play_local_game
 
@@ -114,7 +115,7 @@ class Teacher():
         self.optimizer.step()
 
 if __name__ == "__main__":
-    teacher = Teacher(agent.MagnusDLuffy(), random_agent.Random(), config.GAMES_PER_EPOCH)
+    teacher = Teacher(agent.MagnusDLuffy(), knight_rush_agents.KnightRush(), config.GAMES_PER_EPOCH)
 
     for _ in range(config.EPOCHS):
         teacher.epoch()
