@@ -289,7 +289,7 @@ class MagnusDLuffy(Player):
                 self.mcts.backfill(v, path)
                 return
 
-            if 'pv' in analysis:
+            if 'pv' in analysis and len(analysis['pv']) != 0:
                 if not (score.is_mate() and score.mate() == 0):
                     best_move = analysis['pv'][0]
                     # print('best move is ', best_move, 'with score', score)
