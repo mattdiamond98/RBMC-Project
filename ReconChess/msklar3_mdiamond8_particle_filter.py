@@ -1,13 +1,20 @@
 from msklar3_mdiamond8_chess_helper import piece_equal, empty_path_squares, gen_state, move_to_action, reverse_move
 import random
 import numpy as np
+import chess
 from sklearn.preprocessing import normalize
 
 class ParticleFilter():
+<<<<<<< HEAD
   def __init__(self, board, color, N=5000):
+=======
+  def __init__(self, board, color, N=20_000, epsilon=0.5, random_weight=0.001):
+>>>>>>> 5b72e526c62b2f6eab19544eaa89d9c4d1d4bdca
     self.color = color
     self.particles = [(board.copy(), 1/N) for _ in range(N)]
     self.N = N
+    self.epsilon = epsilon # chance of assuming the opponent made a random move
+    self.random_weight = random_weight # the weight of random moves
   
   def update_opponent_move_result(self, captured_piece, captured_square, network):
     """
@@ -19,35 +26,8 @@ class ParticleFilter():
       
       Goal is to update the particles based on how we believe opponents moved and update the weights accordingly
     """
-    for i, (board,weight) in enumerate(self.particles):
-      board.turn = not self.color
-      possible_moves = list(board.generate_pseudo_legal_moves())
-      
-      if captured_piece:
-        f = lambda move: move.to_square == captured_square
-        possible_moves = list(filter(f, possible_moves))
-      
-      state, possible_board_moves = gen_state(board, not self.color)
-      policy = network.PolicyForward(state, possible_board_moves).detach().numpy()
-      
-      possible_move_weights = np.ndarray(len(possible_moves))
-      for i,move in enumerate(possible_moves):
-        possible_move_weights[i] = policy[move_to_action(move)]
-      
-      if np.all(possible_move_weights == 0):
-        weight *= 0.00001
-      else:
-        move = np.random.choice(possible_moves, p=possible_move_weights / np.sum(possible_move_weights))
-        weight *= policy[move_to_action(move)]
-        if self.color:
-          board.push(move)
-        else:
-          board.push(reverse_move(move))
-      self.particles[i] = (board, weight)
-    
-      
-      
-  
+    self.particles = [self.update_particle_by_opponent_move(board, weight, captured_piece, captured_square, network) for (board, weight) in self.particles]
+   
   def update_sense_result(self, sense_result):
     """
         This is a function called after you pick your 3x3 square to sense and lets us update our particles.
@@ -94,21 +74,22 @@ class ParticleFilter():
     empty_squares = empty_path_squares(taken_move) # list of squares we know are empty based on our move
     
     for i, (board, weight) in enumerate(self.particles):
-      new_weight = 1
-      
+      board = board.copy()
       if captured_piece:
         if board.piece_at(captured_square) is None:
-          new_weight = 0.0001 * weight
+          weight *= 0.0001
+      try:
+        board.push(taken_move)  
+      except:
+        weight *= 0.0001
+        
+      if not board.is_castling(taken_move):
+        for square in empty_squares:
+          if board.piece_at(square) is not None:
+            board.set_piece_at(square, None)
+            weight *= 0.0001
       
-      for square in empty_squares:
-        if board.piece_at(square) is not None:
-          board.set_piece_at(square, None)
-          new_weight = 0.0001 * weight
-          
-      board.set_piece_at(taken_move.to_square, board.piece_at(taken_move.from_square))
-      board.set_piece_at(taken_move.from_square, None)
-      
-      self.particles[i] = (board, new_weight)
+      self.particles[i] = (board, weight)
     self.update_particles_by_weight()
     self.normalize_particles()
       
@@ -134,12 +115,46 @@ class ParticleFilter():
       if not board.is_valid():
         invalid.append(i)
     
-    # if len(invalid) > 0:
-    #   repeated_sample = self.sample_from_particles(len(invalid), max_iter = max_iter - 1)
-    #   for i in range(len(invalid)):
-    #     sample[invalid[i]] = repeated_sample[i]
+    if len(invalid) > 0:
+      repeated_sample = self.sample_from_particles(len(invalid), max_iter = max_iter - 1)
+      if len(repeated_sample) == 0:
+        return []
+      for i in range(len(invalid)):
+        sample[invalid[i]] = repeated_sample[i]
     
     return sample
+
+  def update_particle_by_opponent_move(self, board, weight, captured_piece, captured_square, network):
+    board = board.copy()
+    board.turn = not self.color
+    possible_moves = list(board.generate_pseudo_legal_moves())
+
+    if captured_piece:
+      f = lambda move: move.to_square == captured_square
+      possible_moves = list(filter(f, possible_moves))    
+      
+    if not possible_moves:
+      weight *= 0.00001
+    else:
+      if random.random() < self.epsilon:
+        move = np.random.choice(possible_moves)
+        weight *= self.random_weight
+      else:
+        state, possible_board_moves = gen_state(board, not self.color)
+        policy = network.PolicyForward(state, possible_board_moves).detach().numpy()
+        
+        possible_move_weights = np.ndarray(len(possible_moves))
+        for i,move in enumerate(possible_moves):
+          possible_move_weights[i] = policy[move_to_action(move)]
+        
+        if np.all(possible_move_weights == 0):
+          move = np.random.choice(possible_moves)
+          weight *= 0.00001
+        else:
+          move = np.random.choice(possible_moves, p=possible_move_weights / np.sum(possible_move_weights))
+          weight *= policy[move_to_action(move)]
+      board.push(move)
+    return (board, weight)
 
   def update_particles_by_weight(self):
     """
