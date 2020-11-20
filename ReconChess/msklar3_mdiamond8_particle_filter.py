@@ -1,8 +1,6 @@
-from msklar3_mdiamond8_chess_helper import piece_equal, empty_path_squares, gen_state, move_to_action, reverse_move
+from msklar3_mdiamond8_chess_helper import piece_equal, empty_path_squares, gen_state, move_to_action
 import random
 import numpy as np
-import chess
-from sklearn.preprocessing import normalize
 
 class ParticleFilter():
   def __init__(self, board, color, N=10_000, epsilon=0.5, random_weight=0.001):
