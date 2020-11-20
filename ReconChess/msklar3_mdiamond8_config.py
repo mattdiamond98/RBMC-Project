@@ -12,5 +12,6 @@ GAMES_PER_EPOCH = 5 # Games played before training network
 TRAINING_TURNS_PER_EPOCH = 250
 
 STOCKFISH_DEPTH = 20
+RUN_STOCKFISH = True
 
 moves_till_loss = 200

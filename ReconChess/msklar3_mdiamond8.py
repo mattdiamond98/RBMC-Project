@@ -61,6 +61,12 @@ class MagnusDLuffy(Player):
         self.mcts = None
         self.game_history = memory.GameMemory()
 
+        dirname = path.dirname(__file__)
+        self.stockfish = chess.engine.SimpleEngine.popen_uci(path.join(dirname, 'msklar3_mdiamond8_stockfish'))
+        board = chess.Board('1k1R4/8/8/1K6/8/8/8/8 w - - 0 1')
+        hi = self.stockfish.analyse(board, chess.engine.Limit(time=.1))
+        print(board)
+
         # self.stockfish = chess.engine.SimpleEngine.popen_uci(path.abspath('msklar3_mdiamond8_stockfish'))
         
     def handle_game_start(self, color, board):
@@ -187,8 +193,9 @@ class MagnusDLuffy(Player):
         particle_sample = self.state.sample_from_particles()
         if not particle_sample:
           return random.choice(possible_moves)
-
-        self.stockfish = chess.engine.SimpleEngine.popen_uci(path.abspath('msklar3_mdiamond8_stockfish'))
+          
+        dirname = path.dirname(__file__)
+        self.stockfish = chess.engine.SimpleEngine.popen_uci(path.join(dirname, 'msklar3_mdiamond8_stockfish'))
 
         sample, weight = particle_sample[0] # sample a single state from the particles
 
@@ -277,7 +284,7 @@ class MagnusDLuffy(Player):
         # Evaluation
         pi, v = self.evaluate_leaf(leaf)
 
-        if sample.is_valid(): 
+        if sample.is_valid() and config.RUN_STOCKFISH: 
             try:           
                 analysis = self.stockfish.analyse(sample, chess.engine.Limit(time=.1))
                 stockfish_success = True
@@ -389,7 +396,7 @@ class MagnusDLuffy(Player):
             return chess.Move.from_uci(WHITE_OPENING[self.opening_turn])
 
         if self.color == chess.BLACK:
-            if self.opening_turn > 3:
+            if self.opening_turn > 2:
                 return None
 
             return chess.Move.from_uci(BLACK_OPENING[self.opening_turn])
