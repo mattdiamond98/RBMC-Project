@@ -105,6 +105,9 @@ class MagnusDLuffy(Player):
 
         sample = self.state.sample_from_particles(50)
         
+        if not sample:
+          return random.choice(possible_sense)
+        
         most_uncertain = None
         most_uncertain_score = None
         for square in possible_sense:
@@ -136,7 +139,7 @@ class MagnusDLuffy(Player):
             most_uncertain = square
             most_uncertain_score = total_score
           
-        return random.choice(possible_sense)
+        return most_uncertain
         
     def handle_sense_result(self, sense_result):
         """
@@ -182,7 +185,10 @@ class MagnusDLuffy(Player):
             self.opening_turn += 1
             return opening_move
 
-        sample, weight = self.state.sample_from_particles()[0] # sample a single state from the particles
+        particle_sample = self.state.sample_from_particles()
+        if not particle_sample:
+          return random.choice(possible_moves)
+        sample, weight = particle_sample[0] # sample a single state from the particles
 
         state, moves = gen_state(sample, self.state.color)
 

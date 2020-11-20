@@ -98,13 +98,14 @@ class ParticleFilter():
     :return: list(tuple(board, int)) -- the particle returned in the form (board, weight)
     """
     if max_iter <= 0:
-      # print("Sample repeatedly returned invalid particles")
-      # print("Particles:")
-      # print(self.particles)
+      print("Sample repeatedly returned invalid particles")
       return []
-    
-    sample = random.choices(self.particles, weights=[weight for (board, weight) in self.particles], k=K)
-    
+    try:
+      sample = random.choices(self.particles, weights=[weight for (board, weight) in self.particles], k=K)
+    except:
+      print("Sample threw an exception")
+      return []
+  
     invalid = []
     for i, particle in enumerate(sample):
       board, weight = particle
@@ -113,7 +114,7 @@ class ParticleFilter():
     
     if len(invalid) > 0:
       repeated_sample = self.sample_from_particles(len(invalid), max_iter = max_iter - 1)
-      if len(repeated_sample) == 0:
+      if len(repeated_sample) < len(invalid):
         return []
       for i in range(len(invalid)):
         sample[invalid[i]] = repeated_sample[i]
