@@ -61,12 +61,6 @@ class MagnusDLuffy(Player):
         self.mcts = None
         self.game_history = memory.GameMemory()
 
-        dirname = path.dirname(__file__)
-        self.stockfish = chess.engine.SimpleEngine.popen_uci(path.join(dirname, 'msklar3_mdiamond8_stockfish'))
-        board = chess.Board('1k1R4/8/8/1K6/8/8/8/8 w - - 0 1')
-        hi = self.stockfish.analyse(board, chess.engine.Limit(time=.1))
-        print(board)
-
         # self.stockfish = chess.engine.SimpleEngine.popen_uci(path.abspath('msklar3_mdiamond8_stockfish'))
         
     def handle_game_start(self, color, board):
@@ -280,6 +274,28 @@ class MagnusDLuffy(Player):
         # Selection
         leaf, path = self.mcts.select()
         sample = leaf.sample
+
+        king_square = sample.king(not sample.turn)
+
+        if king_square != None:
+            for move in sample.pseudo_legal_moves:
+                if move.to_square == king_square:
+                    print('can capture king')
+                    action_id = helper.move_to_action(move)
+                    new_sample = copy.deepcopy(sample)
+                    new_sample.push(move)
+                    new_state, _ = gen_state(new_sample, not self.mcts.leaf.color)
+
+                    self.mcts.leaf.edges.append(mcts.Edge(
+                        self.mcts.leaf,
+                        mcts.Node((new_state, possible_moves), new_sample, not self.mcts.leaf.color),
+                        action_id,
+                        1))
+
+                    # Backup
+                    self.mcts.backfill(1, path)
+
+                    return
 
         # Evaluation
         pi, v = self.evaluate_leaf(leaf)
