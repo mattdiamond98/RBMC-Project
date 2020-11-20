@@ -190,6 +190,6 @@ def cp_to_win_probability(cp):
     return 1
 
   if cp < -10:
-    return 1  
+    return -1  
   
   return 1 / (1 + 10**(-((cp / 10) / 4)))
