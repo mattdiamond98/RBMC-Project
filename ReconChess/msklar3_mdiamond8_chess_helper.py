@@ -181,3 +181,15 @@ def best_move_to_action_map(move):
   action_map[action] = 1
 
   return action_map
+
+def cp_to_win_probability(cp):
+  if cp == 0:
+    return 0
+
+  if cp > 10:
+    return 1
+
+  if cp < -10:
+    return 1  
+  
+  return 1 / (1 + 10**(-((cp / 10) / 4)))

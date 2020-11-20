@@ -9,6 +9,7 @@ Description:    Python file for my agent.
 Source:         Adapted from recon-chess (https://pypi.org/project/reconchess/)
 """
 
+import copy
 import os.path as path
 import random
 import time
@@ -60,8 +61,7 @@ class MagnusDLuffy(Player):
         self.mcts = None
         self.game_history = memory.GameMemory()
 
-        self.stockfish = chess.engine.SimpleEngine.popen_uci(path.abspath('msklar3_mdiamond8_stockfish'))
-        # self.stockfish = chess.engine.SimpleEngine.popen_uci('/usr/games/stockfish')
+        # self.stockfish = chess.engine.SimpleEngine.popen_uci(path.abspath('msklar3_mdiamond8_stockfish'))
         
     def handle_game_start(self, color, board):
         """
@@ -75,6 +75,7 @@ class MagnusDLuffy(Player):
         self.state = ParticleFilter(board, color)
         self.legal_move_made = False    # train network to make legal moves
         self.opening_turn = 0
+        self.invalid_pos = False
      
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
@@ -172,6 +173,8 @@ class MagnusDLuffy(Player):
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
         # # NOTE: for training, we randomly sample but for tournament we should select the most likely always
+        self.stockfish = chess.engine.SimpleEngine.popen_uci(path.abspath('msklar3_mdiamond8_stockfish'))
+
         opening_move = self.opening()
 
         if opening_move != None:
@@ -182,11 +185,7 @@ class MagnusDLuffy(Player):
 
         state, moves = gen_state(sample, self.state.color)
 
-        best_move = self.stockfish.play(sample, chess.engine.Limit(time=0.1))
-        print('best move is ', best_move.move)
-        stockfish_actions = helper.best_move_to_action_map(best_move.move)
-
-        action = self.pick_action(state, moves, stockfish_actions)
+        action = self.pick_action(state, sample, moves)
 
         self.game_history.add_turn(memory.TurnMemory(
             (state, moves), # state and pseudo-legal moves
@@ -196,6 +195,8 @@ class MagnusDLuffy(Player):
         choice = action_map(action[0])
         if choice in possible_moves:
             self.legal_move_made = True
+
+        self.stockfish.quit()
 
         return choice
         
@@ -220,12 +221,12 @@ class MagnusDLuffy(Player):
         :param win_reason: String -- the reason for the game ending
         """
         v = [1] if self.color == winner_color else [-1]
-        # v = [1] if self.legal_move_made else [-1]   # train to make legal move
+
+        # self.stockfish.quit()
+
         self.game_history.v = torch.tensor(v, dtype=torch.float32)
         print('loss game', v)
         torch.save(self.network, 'network.torch')
-
-        self.stockfish.quit()
 
         print("I'm gonna be king of the chess players!")
         print('network grad', self.network.policy_linear.weight.grad)
@@ -241,12 +242,13 @@ class MagnusDLuffy(Player):
         2 -> the probability distribution from the neural network
         3 -> the probability distribution from the MCTS
     '''
-    def pick_action(self, state, possible_moves, stockfish_actions):
+    def pick_action(self, state, sample, possible_moves):
         # Get value of the state from the neural network and probability distsribution from the neural network
         nn_policy, nn_value = self.network.forward(state, possible_moves)
 
         # Create MCT
-        root = mcts.Node((state, possible_moves), self.state.color)
+        print('mct sample\n', sample, sample.is_valid())
+        root = mcts.Node((state, possible_moves), sample, self.state.color)
         self.mcts = mcts.MCTS(root, self.state.color)
 
         # Train the MCT
@@ -254,24 +256,64 @@ class MagnusDLuffy(Player):
             self.simulate(state, possible_moves)
 
         # Choose the optimal action given the MCT
-        action, pi = self.select_move(config.TAU, stockfish_actions)
-
+        action, pi = self.select_move(config.TAU)
+        # self.mcts.to_string()
         return action, nn_value, nn_policy, pi
 
     def simulate(self, state, possible_moves):
         # Selection
         leaf, path = self.mcts.select()
+        sample = leaf.sample
 
         # Evaluation
         pi, v = self.evaluate_leaf(leaf)
+
+        if sample.is_valid():            
+            analysis = self.stockfish.analyse(sample, chess.engine.Limit(time=.1))
+            score = analysis['score'].relative
+            turn = analysis['score'].turn
+
+            # Leaf node of game
+            if score.is_mate() and score.mate() == 0:
+                # Backup
+                stockfish_v = 1 if turn == leaf.color else 0
+                v = config.NN_DECISION_WEIGHT_ALPHA * v + (1 - config.NN_DECISION_WEIGHT_ALPHA) * (stockfish_v)
+
+                self.mcts.backfill(v, path)
+                return
+
+            if len(analysis['pv']) != 0:
+                if not (score.is_mate() and score.mate() == 0):
+                    best_move = analysis['pv'][0]
+                    # print('best move is ', best_move, 'with score', score)
+                    stockfish_actions = helper.best_move_to_action_map(best_move)
+
+                pi = config.NN_DECISION_WEIGHT_ALPHA * pi.detach().numpy() + (1 - config.NN_DECISION_WEIGHT_ALPHA) * stockfish_actions
+                pi = torch.tensor(pi)
+
+                if score.is_mate():
+                    stockfish_v = score.mate() / abs(score.mate())
+                else:
+                    stockfish_v = helper.cp_to_win_probability(score.score())
+
+                v = config.NN_DECISION_WEIGHT_ALPHA * v + (1 - config.NN_DECISION_WEIGHT_ALPHA) * stockfish_v
 
         # Expansion
         best_policies = torch.topk(pi, config.SIMULATION_EXPANSION)[1]
 
         for action_id in best_policies:
+            action_move = helper.action_map(action_id)
+            
+            if action_move not in sample.pseudo_legal_moves:
+                continue
+
+            new_sample = copy.deepcopy(sample)
+            new_sample.push(action_move)
+            new_state, _ = gen_state(new_sample, not self.mcts.leaf.color)
+
             self.mcts.leaf.edges.append(mcts.Edge(
                 self.mcts.leaf,
-                mcts.Node((state, possible_moves), not self.mcts.leaf.color),
+                mcts.Node((new_state, possible_moves), new_sample, not self.mcts.leaf.color),
                 action_id,
                 pi[action_id]))
 
@@ -287,13 +329,14 @@ class MagnusDLuffy(Player):
     Select a move to use and return the action to make the move and probability
     distribution of the policies.
     '''
-    def select_move(self, tau, stockfish_actions):
+    def select_move(self, tau):
         pi, values = self.policy(tau)
-        pi = config.NN_DECISION_WEIGHT_ALPHA * pi + (1 - config.NN_DECISION_WEIGHT_ALPHA) * stockfish_actions
 
         if tau == 0:    # Deterministic
             action = random.choice(np.anywhere(pi == max(pi)))
         else:           # Stochastically
+            # self.mcts.to_string()
+            print('pi is', pi)
             action_id = np.random.multinomial(1, pi)
             action = np.where(action_id == 1)[0][0]
 
@@ -305,11 +348,15 @@ class MagnusDLuffy(Player):
 
     # Generate pi and get values to pass through
     def policy(self, tau):
+        print(self.mcts.root.sample)
         edges = self.mcts.root.edges
         pi = np.zeros(MOVE_OPTIONS, dtype=np.double)
         values = np.zeros(MOVE_OPTIONS, dtype=np.float32)
-
+        if len(edges) == 0:
+            print("there are no edges here")
         for edge in edges:
+            print('edge is ', edge)
+            edge.to_string()
             values[edge.action] = edge.data['Q']
 
             if tau == 0:
@@ -322,6 +369,8 @@ class MagnusDLuffy(Player):
         return pi, values
 
     def opening(self):
+        if self.opening_turn > 0:
+            return None
         if self.color == chess.WHITE:
             if self.opening_turn > 4:
                 return None

@@ -1,8 +1,9 @@
 import msklar3_mdiamond8_config as config
 
 class Node():
-    def __init__(self, state, color):
+    def __init__(self, state, sample, color):
         self.state = state
+        self.sample = sample
         self.color = color
 
         self.edges = []
@@ -11,7 +12,7 @@ class Node():
         return len(self.edges) == 0
 
     def to_string(self):
-        print("node has state", self.state)
+        # print("node has state", self.state)
         
         for edge in self.edges:
             print("    edge has values: N = {}, W = {}, Q = {}, P = {}".format(
@@ -20,6 +21,9 @@ class Node():
                 edge.data['Q'],
                 edge.data['P'],
             ))
+        
+        for edge in self.edges:
+            edge.out_node.to_string()
 
 class Edge():
     def __init__(self, in_node, out_node, action, prior):
@@ -33,6 +37,10 @@ class Edge():
             'Q' : 0,        # mean value of the next state
             'P' : prior,    # prior probability of selecting action a
         }
+
+    def to_string(self):
+        print('action:', self.action)
+        print('data:', self.data)
 
 class MCTS():
     def __init__(self, root, agent_color):

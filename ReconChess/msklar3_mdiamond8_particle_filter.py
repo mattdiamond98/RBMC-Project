@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.preprocessing import normalize
 
 class ParticleFilter():
-  def __init__(self, board, color, N=500):
+  def __init__(self, board, color, N=5000):
     self.color = color
     self.particles = [(board.copy(), 1/N) for _ in range(N)]
     self.N = N
@@ -121,9 +121,9 @@ class ParticleFilter():
     :return: list(tuple(board, int)) -- the particle returned in the form (board, weight)
     """
     if max_iter <= 0:
-      print("Sample repeatedly returned invalid particles")
-      print("Particles:")
-      print(self.particles)
+      # print("Sample repeatedly returned invalid particles")
+      # print("Particles:")
+      # print(self.particles)
       return []
     
     sample = random.choices(self.particles, weights=[weight for (board, weight) in self.particles], k=K)
@@ -134,10 +134,10 @@ class ParticleFilter():
       if not board.is_valid():
         invalid.append(i)
     
-    if len(invalid) > 0:
-      repeated_sample = self.sample_from_particles(len(invalid), max_iter = max_iter - 1)
-      for i in range(len(invalid)):
-        sample[invalid[i]] = repeated_sample[i]
+    # if len(invalid) > 0:
+    #   repeated_sample = self.sample_from_particles(len(invalid), max_iter = max_iter - 1)
+    #   for i in range(len(invalid)):
+    #     sample[invalid[i]] = repeated_sample[i]
     
     return sample
 
