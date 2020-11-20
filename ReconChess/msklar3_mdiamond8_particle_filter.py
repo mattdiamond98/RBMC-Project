@@ -5,7 +5,7 @@ import chess
 from sklearn.preprocessing import normalize
 
 class ParticleFilter():
-  def __init__(self, board, color, N=5_000, epsilon=0.5, random_weight=0.001):
+  def __init__(self, board, color, N=10_000, epsilon=0.5, random_weight=0.001):
     self.color = color
     self.particles = [(board.copy(), 1/N) for _ in range(N)]
     self.N = N

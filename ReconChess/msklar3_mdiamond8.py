@@ -177,7 +177,6 @@ class MagnusDLuffy(Player):
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
         # # NOTE: for training, we randomly sample but for tournament we should select the most likely always
-        self.stockfish = chess.engine.SimpleEngine.popen_uci(path.abspath('msklar3_mdiamond8_stockfish'))
 
         opening_move = self.opening()
 
@@ -188,6 +187,9 @@ class MagnusDLuffy(Player):
         particle_sample = self.state.sample_from_particles()
         if not particle_sample:
           return random.choice(possible_moves)
+
+        self.stockfish = chess.engine.SimpleEngine.popen_uci(path.abspath('msklar3_mdiamond8_stockfish'))
+
         sample, weight = particle_sample[0] # sample a single state from the particles
 
         state, moves = gen_state(sample, self.state.color)
@@ -275,35 +277,41 @@ class MagnusDLuffy(Player):
         # Evaluation
         pi, v = self.evaluate_leaf(leaf)
 
-        if sample.is_valid():            
-            analysis = self.stockfish.analyse(sample, chess.engine.Limit(time=.1))
-            score = analysis['score'].relative
-            turn = analysis['score'].turn
+        if sample.is_valid(): 
+            try:           
+                analysis = self.stockfish.analyse(sample, chess.engine.Limit(time=.1))
+                stockfish_success = True
+            except:
+                stockfish_success = False
 
-            # Leaf node of game
-            if score.is_mate() and score.mate() == 0:
-                # Backup
-                stockfish_v = 1 if turn == leaf.color else 0
-                v = config.NN_DECISION_WEIGHT_ALPHA * v + (1 - config.NN_DECISION_WEIGHT_ALPHA) * (stockfish_v)
+            if stockfish_success:
+                score = analysis['score'].relative
+                turn = analysis['score'].turn
 
-                self.mcts.backfill(v, path)
-                return
+                # Leaf node of game
+                if score.is_mate() and score.mate() == 0:
+                    # Backup
+                    stockfish_v = 1 if turn == leaf.color else 0
+                    v = config.NN_DECISION_WEIGHT_ALPHA * v + (1 - config.NN_DECISION_WEIGHT_ALPHA) * (stockfish_v)
 
-            if 'pv' in analysis and len(analysis['pv']) != 0:
-                if not (score.is_mate() and score.mate() == 0):
-                    best_move = analysis['pv'][0]
-                    # print('best move is ', best_move, 'with score', score)
-                    stockfish_actions = helper.best_move_to_action_map(best_move)
+                    self.mcts.backfill(v, path)
+                    return
 
-                pi = config.NN_DECISION_WEIGHT_ALPHA * pi.detach().numpy() + (1 - config.NN_DECISION_WEIGHT_ALPHA) * stockfish_actions
-                pi = torch.tensor(pi)
+                if 'pv' in analysis and len(analysis['pv']) != 0:
+                    if not (score.is_mate() and score.mate() == 0):
+                        best_move = analysis['pv'][0]
+                        # print('best move is ', best_move, 'with score', score)
+                        stockfish_actions = helper.best_move_to_action_map(best_move)
 
-                if score.is_mate():
-                    stockfish_v = score.mate() / abs(score.mate())
-                else:
-                    stockfish_v = helper.cp_to_win_probability(score.score())
+                    pi = config.NN_DECISION_WEIGHT_ALPHA * pi.detach().numpy() + (1 - config.NN_DECISION_WEIGHT_ALPHA) * stockfish_actions
+                    pi = torch.tensor(pi)
 
-                v = config.NN_DECISION_WEIGHT_ALPHA * v + (1 - config.NN_DECISION_WEIGHT_ALPHA) * stockfish_v
+                    if score.is_mate():
+                        stockfish_v = score.mate() / abs(score.mate())
+                    else:
+                        stockfish_v = helper.cp_to_win_probability(score.score())
+
+                    v = config.NN_DECISION_WEIGHT_ALPHA * v + (1 - config.NN_DECISION_WEIGHT_ALPHA) * stockfish_v
 
         # Expansion
         best_policies = torch.topk(pi, config.SIMULATION_EXPANSION)[1]
@@ -340,10 +348,8 @@ class MagnusDLuffy(Player):
         pi, values = self.policy(tau)
 
         if tau == 0:    # Deterministic
-            action = random.choice(np.anywhere(pi == max(pi)))
+            action = random.choice(np.where(pi == max(pi)))[0]
         else:           # Stochastically
-            # self.mcts.to_string()
-            print('pi is', pi)
             action_id = np.random.multinomial(1, pi)
             action = np.where(action_id == 1)[0][0]
 
@@ -376,8 +382,6 @@ class MagnusDLuffy(Player):
         return pi, values
 
     def opening(self):
-        if self.opening_turn > 0:
-            return None
         if self.color == chess.WHITE:
             if self.opening_turn > 4:
                 return None
