@@ -83,7 +83,8 @@ class MagnusDLuffy(Player):
         :param captured_piece: bool - true if your opponents captured your piece with their last move
         :param captured_square: chess.Square - position where your piece was captured
         """
-        self.state.update_opponent_move_result(captured_piece, captured_square, self.network)
+        if self.opening_turn > 0:
+            self.state.update_opponent_move_result(captured_piece, captured_square, self.network)
 
     def choose_sense(self, possible_sense, possible_moves, seconds_left):
         """
