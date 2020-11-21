@@ -2,11 +2,11 @@ import random
 import chess
 from player import Player
 
-WHITE_LEFT_KNIGHT = {'b1': 'b1c3', 'c3': 'c3e4', 'e4': 'e4d6', 'd6': 'd6e8'}
-WHITE_RIGHT_KNIGHT = {'g1': 'g1h3', 'h3': 'h3f4', 'f4': 'f4h5', 'h5': 'h5f6', 'f6': 'f6e8'}
+WHITE_LEFT_KNIGHT = {chess.B1: chess.C3, chess.C3: chess.E4, chess.E4: chess.D6, chess.D6: chess.E8}
+WHITE_RIGHT_KNIGHT = {chess.G1: chess.H3, chess.H3: chess.F4, chess.F4: chess.H5, chess.H5: chess.F6, chess.F6: chess.E8}
 
-BLACK_LEFT_KNIGHT = {'b8': 'b8c6', 'c6': 'c6b4', 'b4': 'b4d3', 'd3': 'd3e1'}
-BLACK_RIGHT_KNIGHT = {'g8': 'g8f6', 'f6': 'f6h5', 'h5': 'h5f4', 'f4': 'f4d3', 'd3': 'd3e1'}
+BLACK_LEFT_KNIGHT = {chess.B8: chess.C6, chess.C6: chess.B4, chess.B4: chess.D3, chess.D3: chess.E1}
+BLACK_RIGHT_KNIGHT = {chess.G8: chess.F6, chess.F6: chess.H5, chess.H5: chess.F4, chess.F4: chess.D3, chess.D3: chess.E1}
 
 class KnightRush(Player):
         
@@ -18,10 +18,10 @@ class KnightRush(Player):
         :param board: chess.Board -- initial board state
         """
         self.color = color
-        self.left_knight = 'b1' if color else 'b8'
-        self.right_knight = 'g1' if color else 'g8'
-        self.left_policy = WHITE_LEFT_KNIGHT if color else BLACK_RIGHT_KNIGHT
-        self.right_policy = WHITE_RIGHT_KNIGHT if color else BLACK_LEFT_KNIGHT
+        self.left_knight = chess.B1 if color else chess.B8
+        self.right_knight = chess.G1 if color else chess.G8
+        self.left_policy = WHITE_LEFT_KNIGHT if color else BLACK_LEFT_KNIGHT
+        self.right_policy = WHITE_RIGHT_KNIGHT if color else BLACK_RIGHT_KNIGHT
         
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
@@ -79,10 +79,10 @@ class KnightRush(Player):
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """          
         if self.left_knight is not None and self.left_knight in self.left_policy:
-            return self.left_policy[self.left_knight]
+            return chess.Move(self.left_knight, self.left_policy[self.left_knight])
         
         if self.right_knight is not None and self.right_knight in self.right_policy:
-            return self.right_policy[self.right_knight]
+            return chess.Move(self.right_knight, self.right_policy[self.right_knight])
           
         return random.choice(possible_moves)
         
@@ -97,11 +97,11 @@ class KnightRush(Player):
         :param captured_piece: bool -- true if you captured your opponents piece
         :param captured_square: chess.Square -- position where you captured the piece
         """
-        print(self.left_knight)
-        if self.left_knight == taken_move.from_square:
-            self.left_knight = taken_move.to_square
-        if self.right_knight == taken_move.from_square:
-            self.right_knight = taken_move.to_square
+        if taken_move is not None:
+            if self.left_knight == taken_move.from_square:
+                self.left_knight = taken_move.to_square
+            if self.right_knight == taken_move.from_square:
+                self.right_knight = taken_move.to_square
         
     def handle_game_end(self, winner_color, win_reason):  # possible GameHistory object...
         """
