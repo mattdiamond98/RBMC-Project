@@ -8,8 +8,8 @@ NN_DECISION_WEIGHT_ALPHA = .3    # how much the neural network output decides th
 SIMULATION_EXPANSION = 15
 
 EPOCHS = 10
-GAMES_PER_EPOCH = 5 # Games played before training network
-TRAINING_TURNS_PER_EPOCH = 250
+GAMES_PER_EPOCH = 10 # Games played before training network
+TRAINING_TURNS_PER_EPOCH = 500
 
 STOCKFISH_DEPTH = 20
 RUN_STOCKFISH = True

@@ -97,6 +97,7 @@ class KnightRush(Player):
         :param captured_piece: bool -- true if you captured your opponents piece
         :param captured_square: chess.Square -- position where you captured the piece
         """
+        print(self.left_knight)
         if self.left_knight == taken_move.from_square:
             self.left_knight = taken_move.to_square
         if self.right_knight == taken_move.from_square:
