@@ -55,6 +55,7 @@ class Teacher():
     def play_game(self):
         results = play_local_game(self.agent, self.opponent, ['white','black'])
         print(results[0])
+        print("All game stats", WINNERS)
         if results[0] == True:
             WINNERS['WHITE'] += 1
 
