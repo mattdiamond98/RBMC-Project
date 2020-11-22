@@ -13,7 +13,7 @@ import copy
 import os.path as path
 import random
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import chess
 import chess.engine
@@ -85,6 +85,9 @@ class MagnusDLuffy(Player):
         :param captured_piece: bool - true if your opponents captured your piece with their last move
         :param captured_square: chess.Square - position where your piece was captured
         """
+        self.start_time = datetime.now()
+        self.end_time = self.start_time + timedelta(seconds=(60 - config.SAFETY_TIME))
+
         if self.opening_turn > 0:
             self.state.update_opponent_move_result(captured_piece, captured_square, self.network)
 
@@ -237,7 +240,10 @@ class MagnusDLuffy(Player):
         :param captured_piece: bool - true if you captured your opponents piece
         :param captured_square: chess.Square - position where you captured the piece
         """
+        start_time = datetime.now()
         self.state.update_handle_move_result(taken_move, captured_piece, captured_square)
+        print('end of turn took ', datetime.now() - start_time)
+        print('turn took ', datetime.now() - self.start_time)
         
     def handle_game_end(self, winner_color, win_reason):  # possible GameHistory object...
         """
@@ -274,17 +280,16 @@ class MagnusDLuffy(Player):
         nn_policy, nn_value = self.network.forward(state, possible_moves)
 
         # Create MCT
-        print('mct sample\n', sample, sample.is_valid())
         root = mcts.Node((state, possible_moves), sample, self.state.color)
         self.mcts = mcts.MCTS(root, self.state.color)
 
         # Train the MCT
-        for _ in range(config.MCTS_SIMULATIONS):
+        while datetime.now() < (self.end_time - timedelta(seconds=config.EXTRA_SAFETY_MCTS)):
             self.simulate(state, possible_moves)
 
         # Choose the optimal action given the MCT
         action, pi = self.select_move(config.TAU)
-        # self.mcts.to_string()
+        self.mcts.to_string()
         return action, nn_value, nn_policy, pi
 
     def simulate(self, state, possible_moves):
@@ -297,7 +302,6 @@ class MagnusDLuffy(Player):
         if king_square != None:
             for move in sample.pseudo_legal_moves:
                 if move.to_square == king_square:
-                    print('can capture king')
                     action_id = helper.move_to_action(move)
                     new_sample = copy.deepcopy(sample)
                     new_sample.push(move)
@@ -408,8 +412,6 @@ class MagnusDLuffy(Player):
         if len(edges) == 0:
             print("there are no edges here")
         for edge in edges:
-            print('edge is ', edge)
-            edge.to_string()
             values[edge.action] = edge.data['Q']
 
             if tau == 0:
