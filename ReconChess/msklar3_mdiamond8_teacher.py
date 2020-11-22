@@ -26,7 +26,7 @@ class Teacher():
         self.win  = 0
         self.loss = 0
 
-        self.network = torch.load('network.torch')
+        self.network = torch.load('msklar3_mdiamond8_network.torch')
         self.optimizer = optim.Adam(self.network.parameters(), lr=0.01)
 
     def epoch(self):

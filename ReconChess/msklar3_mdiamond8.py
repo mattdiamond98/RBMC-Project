@@ -54,7 +54,7 @@ class MagnusDLuffy(Player):
 
     def __init__(self):
         try:
-            self.network = torch.load('network.torch')
+            self.network = torch.load('msklar3_mdiamond8_network.torch')
         except:
             print('failed to find network.torch')
             self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
