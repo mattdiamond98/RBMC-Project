@@ -323,11 +323,6 @@ class Game:
         if not self.is_over():
             return None
             
-        if self.seconds_left_by_color[chess.WHITE] <= 0:
-            return chess.BLACK, "BLACK won by timeout"
-        elif self.seconds_left_by_color[chess.BLACK] <= 0:
-            return chess.WHITE, "WHITE won by timeout"
-            
         if self.truth_board.king(chess.WHITE) is None:
             return chess.BLACK, "BLACK won by king capture."
         elif self.truth_board.king(chess.BLACK) is None:
