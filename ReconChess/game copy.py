@@ -11,7 +11,6 @@ Source:         Adapted from recon-chess (https://pypi.org/project/reconchess/)
 
 import chess
 from datetime import datetime
-import msklar3_mdiamond8_config as config
 
 
 class Game:
@@ -28,7 +27,6 @@ class Game:
         
         self.white_board.set_fen(white_fen)
         self.black_board.set_fen(black_fen)
-        self.full_turn_count = 0
         
         self.is_finished = False
 
@@ -299,7 +297,6 @@ class Game:
 
         self.turn = not self.turn
         self.current_turn_start_time = datetime.now()
-        self.full_turn_count += 1
         
     def is_over(self):
         """
@@ -310,9 +307,9 @@ class Game:
         if self.is_finished:
             return True
 
-        too_many_turns = self.full_turn_count == config.moves_till_loss
+        no_time_left = self.seconds_left_by_color[chess.WHITE] <= 0 or self.seconds_left_by_color[chess.BLACK] <= 0
         king_captured = self.truth_board.king(chess.WHITE) is None or self.truth_board.king(chess.BLACK) is None
-        return too_many_turns or king_captured
+        return no_time_left or king_captured
         
     def get_winner(self):
         """
@@ -332,6 +329,3 @@ class Game:
             return chess.BLACK, "BLACK won by king capture."
         elif self.truth_board.king(chess.BLACK) is None:
             return chess.WHITE, "WHITE won by king capture."
-
-        if self.full_turn_count == config.moves_till_loss:
-            return chess.BLACK, "BLACK won by draw REMOVE THIS"

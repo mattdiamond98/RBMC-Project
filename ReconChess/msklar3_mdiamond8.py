@@ -198,7 +198,7 @@ class MagnusDLuffy(Player):
         # # NOTE: for training, we randomly sample but for tournament we should select the most likely always
 
         opening_move = self.opening()
-
+        print('time to choose move', datetime.now() - self.start_time)
         if opening_move != None:
             self.opening_turn += 1
             return opening_move
@@ -216,6 +216,9 @@ class MagnusDLuffy(Player):
 
         action = self.pick_action(state, sample, moves)
 
+        if action == None:  # if time out return random move
+            return np.random.choice(possible_moves)
+        
         self.game_history.add_turn(memory.TurnMemory(
             (state, moves), # state and pseudo-legal moves
             torch.tensor(action[3])
@@ -289,7 +292,12 @@ class MagnusDLuffy(Player):
 
         # Choose the optimal action given the MCT
         action, pi = self.select_move(config.TAU)
+        
+        if action == None:
+            return None
+
         self.mcts.to_string()
+        print(sample)
         return action, nn_value, nn_policy, pi
 
     def simulate(self, state, possible_moves):
@@ -323,7 +331,7 @@ class MagnusDLuffy(Player):
 
         if sample.is_valid() and config.RUN_STOCKFISH: 
             try:           
-                analysis = self.stockfish.analyse(sample, chess.engine.Limit(time=.1))
+                analysis = self.stockfish.analyse(sample, chess.engine.Limit(time=config.STOCKFISH_TIME_LIMIT))
                 stockfish_success = True
             except:
                 stockfish_success = False
@@ -389,7 +397,12 @@ class MagnusDLuffy(Player):
     distribution of the policies.
     '''
     def select_move(self, tau):
-        pi, values = self.policy(tau)
+        p = self.policy(tau)
+
+        if p == None:
+            return None, None
+
+        pi, values = p
 
         if tau == 0:    # Deterministic
             action = random.choice(np.where(pi == max(pi)))[0]
@@ -411,6 +424,8 @@ class MagnusDLuffy(Player):
         values = np.zeros(MOVE_OPTIONS, dtype=np.float32)
         if len(edges) == 0:
             print("there are no edges here")
+            return None
+
         for edge in edges:
             values[edge.action] = edge.data['Q']
 

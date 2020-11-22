@@ -1,4 +1,5 @@
 import msklar3_mdiamond8_config as config
+import msklar3_mdiamond8_chess_helper as helper
 
 class Node():
     def __init__(self, state, sample, color):
@@ -15,15 +16,17 @@ class Node():
         # print("node has state", self.state)
         
         for edge in self.edges:
-            print("    edge has values: N = {}, W = {}, Q = {}, P = {}".format(
+            print("    edge has values: N = {}, W = {}, Q = {}, P = {}, action={}".format(
                 edge.data['N'],
                 edge.data['W'],
                 edge.data['Q'],
                 edge.data['P'],
+                helper.action_map(edge.action)
             ))
+
         
-        for edge in self.edges:
-            edge.out_node.to_string()
+        # for edge in self.edges:
+        #     edge.out_node.to_string()
 
 class Edge():
     def __init__(self, in_node, out_node, action, prior):
