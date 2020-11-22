@@ -56,7 +56,7 @@ class MagnusDLuffy(Player):
         try:
             self.network = torch.load('msklar3_mdiamond8_network.torch')
         except:
-            print('failed to find network.torch')
+            print('failed to find msklar3_mdiamond8_network.torch')
             self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
         self.mcts = None
         self.game_history = memory.GameMemory()
@@ -236,7 +236,7 @@ class MagnusDLuffy(Player):
 
         self.game_history.v = torch.tensor(v, dtype=torch.float32)
         print('loss game', v)
-        torch.save(self.network, 'network.torch')
+        torch.save(self.network, 'msklar3_mdiamond8_network.torch')
 
         print("I'm gonna be king of the chess players!")
         print('network grad', self.network.policy_linear.weight.grad)
