@@ -1,3 +1,5 @@
+import os.path as path
+
 import chess
 import numpy as np
 import torch
@@ -5,12 +7,11 @@ import torch.optim as optim
 
 import msklar3_mdiamond8 as agent
 import msklar3_mdiamond8_config as config
+import msklar3_mdiamond8_knight_rush_agent as knight_rush_agents
 import msklar3_mdiamond8_nn as nn
 import random_agent
-import msklar3_mdiamond8_knight_rush_agent as knight_rush_agents
 from msklar3_mdiamond8_memory import GameMemory, TurnMemory
 from msklar3_mdiamond8_play_game import play_local_game
-
 
 WINNERS = {
     'WHITE' : 0,
@@ -26,7 +27,8 @@ class Teacher():
         self.win  = 0
         self.loss = 0
 
-        self.network = torch.load('msklar3_mdiamond8_network.torch')
+        dirname = path.dirname(__file__)
+        self.network = torch.load(path.join(dirname, 'msklar3_mdiamond8_network.torch'))    
         self.optimizer = optim.Adam(self.network.parameters(), lr=0.01)
 
     def epoch(self):

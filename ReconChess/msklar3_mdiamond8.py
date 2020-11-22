@@ -45,16 +45,17 @@ WHITE_OPENING = ['g1f3', 'g2g3', 'f1g2', 'g2f3', 'e1g1']
 '''
 Theoretical Opening Theory: Theory of the Opening
 
-Bon'Cloud Opening: Anti-Knight Variation
+Van Yeet: Great Bon'-Cloud Variation
 Summary: Strong approaches to consistently defeat the dreaded knight rush (dun dun dun)
 '''
-BLACK_OPENING = ['e7e6', 'e8e7', 'g8f6']
+BLACK_OPENING = ['g7g6', 'f8g7', 'c7d6', 'g8f6', 'g7f6', 'e8g8']
 
 class MagnusDLuffy(Player):
 
     def __init__(self):
         try:
-            self.network = torch.load('msklar3_mdiamond8_network.torch')
+            dirname = path.dirname(__file__)
+            self.network = torch.load(path.join(dirname, 'msklar3_mdiamond8_network.torch'))
         except:
             print('failed to find msklar3_mdiamond8_network.torch')
             self.network = nn.Net(IN_CHANNELS, MOVE_OPTIONS)
@@ -102,6 +103,11 @@ class MagnusDLuffy(Player):
             if self.opening_turn == 3:  # check if knight will capture king in white opening after castling
                 return chess.Square(chess.E4)
 
+        if self.color == chess.BLACK:
+            if self.opening_turn == 2:
+                return chess.Square(chess.E5)
+            elif self.opening_turn == 4:
+                return chess.Square(chess.E5)
 
         sample = self.state.sample_from_particles(50)
         
@@ -156,9 +162,19 @@ class MagnusDLuffy(Player):
         ]
         """
         if self.color == chess.WHITE:   # on turn 3 of white turn handle knight rush capture
-            for square in sense_result:
-                if self.opening_turn == 3:
+            if self.opening_turn == 3:
+                for square in sense_result:
                     if square[0] == chess.F3 and square[1] != chess.Piece(chess.KNIGHT, chess.BLACK):
+                        self.opening_turn += 1
+
+        if self.color == chess.BLACK:
+            if self.opening_turn == 2:
+                for square in sense_result:
+                    if square[0] == chess.D6 and square[1] != chess.Piece(chess.KNIGHT, chess.WHITE):
+                        self.opening_turn += 1
+            if self.opening_turn == 4:
+                for square in sense_result:
+                    if square[0] == chess.F6 and square[1] != chess.Piece(chess.KNIGHT, chess.WHITE):
                         self.opening_turn += 1
 
         self.state.update_sense_result(sense_result)
@@ -236,7 +252,8 @@ class MagnusDLuffy(Player):
 
         self.game_history.v = torch.tensor(v, dtype=torch.float32)
         print('loss game', v)
-        torch.save(self.network, 'msklar3_mdiamond8_network.torch')
+        dirname = path.dirname(__file__)
+        torch.save(self.network, path.join(dirname, 'msklar3_mdiamond8_network.torch'))
 
         print("I'm gonna be king of the chess players!")
         print('network grad', self.network.policy_linear.weight.grad)
@@ -412,7 +429,7 @@ class MagnusDLuffy(Player):
             return chess.Move.from_uci(WHITE_OPENING[self.opening_turn])
 
         if self.color == chess.BLACK:
-            if self.opening_turn > 2:
+            if self.opening_turn > 5:
                 return None
 
             return chess.Move.from_uci(BLACK_OPENING[self.opening_turn])
