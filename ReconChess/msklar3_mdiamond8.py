@@ -112,7 +112,7 @@ class MagnusDLuffy(Player):
             elif self.opening_turn == 4:
                 return chess.Square(chess.E5)
 
-        sample = self.state.sample_from_particles(50)
+        sample = self.state.sample_from_particles(100)
         
         if not sample:
           return random.choice(possible_sense)
