@@ -3,12 +3,12 @@ import random
 import numpy as np
 
 class ParticleFilter():
-  def __init__(self, board, color, N=1_000, epsilon=0.5, random_weight=0.001):
+  def __init__(self, board, color, N=40_000, epsilon=0.60):
     self.color = color
     self.particles = [(board.copy(), 1/N) for _ in range(N)]
     self.N = N
     self.epsilon = epsilon # chance of assuming the opponent made a random move
-    self.random_weight = random_weight # the weight of random moves
+    self.random_weight = 1/(N+1) # the weight of random moves
   
   def update_opponent_move_result(self, captured_piece, captured_square, network):
     """
@@ -95,29 +95,8 @@ class ParticleFilter():
    
     :return: list(tuple(board, int)) -- the particle returned in the form (board, weight)
     """
-    if max_iter <= 0:
-      print("Sample repeatedly returned invalid particles")
-      return []
-    try:
-      sample = random.choices(self.particles, weights=[weight for (board, weight) in self.particles], k=K)
-    except:
-      print("Sample threw an exception")
-      return []
-  
-    invalid = []
-    for i, particle in enumerate(sample):
-      board, weight = particle
-      if not board.is_valid():
-        invalid.append(i)
+    return random.choices(self.particles, weights=[weight for (board, weight) in self.particles], k=K)
     
-    if len(invalid) > 0:
-      repeated_sample = self.sample_from_particles(len(invalid), max_iter = max_iter - 1)
-      if len(repeated_sample) < len(invalid):
-        return []
-      for i in range(len(invalid)):
-        sample[invalid[i]] = repeated_sample[i]
-    
-    return sample
 
   def update_particle_by_opponent_move(self, board, weight, captured_piece, captured_square, network):
     board = board.copy()
