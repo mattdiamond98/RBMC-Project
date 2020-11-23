@@ -3,7 +3,7 @@ TAU = 0.3   # Move selection exploration
 LOG_EPSILON = 1e-15 # Add to probabilities so you never take log 0
 LAMBDA = 0.1   # For l2-normalization overfitting via regulation prevention (TM)
 
-NN_DECISION_WEIGHT_ALPHA = .8    # how much the neural network output decides the action
+NN_DECISION_WEIGHT_ALPHA = .9    # how much the neural network output decides the action
 
 SIMULATION_EXPANSION = 15
 
