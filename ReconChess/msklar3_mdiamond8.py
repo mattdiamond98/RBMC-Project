@@ -322,7 +322,7 @@ class MagnusDLuffy(Player):
                 from_square = move[0].from_square
                 piece = sample.piece_at(from_square)
                 
-                if piece == chess.Piece(chess.KNIGHT, sample.turn):
+                if piece in chess.Piece(chess.KNIGHT, sample.turn) or piece == chess.Piece(chess.PAWN, sample.turn) or piece == chess.Piece(chess.King, sample.turn):
                     self.mcts.leaf.edges.append(mcts.Edge(
                         self.mcts.leaf,
                         mcts.Node((move[1], possible_moves), move[2], not self.mcts.leaf.color),
