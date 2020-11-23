@@ -308,6 +308,7 @@ class MagnusDLuffy(Player):
         king_square = sample.king(not sample.turn)
 
         if king_square != None:
+            # Capture king if possible
             for move in sample.pseudo_legal_moves:
                 if move.to_square == king_square:
                     action_id = helper.move_to_action(move)
@@ -318,6 +319,25 @@ class MagnusDLuffy(Player):
                     self.mcts.leaf.edges.append(mcts.Edge(
                         self.mcts.leaf,
                         mcts.Node((new_state, possible_moves), new_sample, not self.mcts.leaf.color),
+                        action_id,
+                        1))
+
+                    # Backup
+                    self.mcts.backfill(1, path)
+
+                    return
+
+            # Check king if possible
+            for move in sample.pseudo_legal_moves:
+                sample_temp = copy.deepcopy(sample)
+                sample_temp.push(move)
+                if sample_temp.is_check():
+                    action_id = helper.move_to_action(move)
+                    new_state, _ = gen_state(sample_temp, not self.mcts.leaf.color)
+
+                    self.mcts.leaf.edges.append(mcts.Edge(
+                        self.mcts.leaf,
+                        mcts.Node((new_state, possible_moves), sample_temp, not self.mcts.leaf.color),
                         action_id,
                         1))
 
