@@ -1,6 +1,7 @@
 from msklar3_mdiamond8_chess_helper import piece_equal, empty_path_squares, gen_state, move_to_action
 import random
 import numpy as np
+import chess
 
 class ParticleFilter():
   def __init__(self, board, color, N=40_000, epsilon=0.60):
@@ -64,11 +65,14 @@ class ParticleFilter():
       :param captured_square: chess.Square - position where you captured the piece
     """
     if taken_move == None:
-      return # TODO: update in case a move was attempted but blocked unexpectedly
+      return # TODO: maybe update in case a move was attempted but blocked unexpectedly
     empty_squares = empty_path_squares(taken_move) # list of squares we know are empty based on our move
     
     for i, (board, weight) in enumerate(self.particles):
       board = board.copy()
+      
+      castling = board.is_castling(taken_move)
+      
       if captured_piece:
         if board.piece_at(captured_square) is None:
           weight *= 0.0001
@@ -77,7 +81,7 @@ class ParticleFilter():
       except:
         weight *= 0.0001
         
-      if not board.is_castling(taken_move):
+      if not castling:
         for square in empty_squares:
           if board.piece_at(square) is not None:
             board.set_piece_at(square, None)
@@ -106,6 +110,9 @@ class ParticleFilter():
     if captured_piece:
       f = lambda move: move.to_square == captured_square
       possible_moves = list(filter(f, possible_moves))    
+    else:
+      f = lambda move: move.to_square not in list(chess.SquareSet(board.occupied_co[self.color]))
+      possible_moves = list(filter(f, possible_moves))
       
     if not possible_moves:
       weight *= 0.00001
